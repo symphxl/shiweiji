@@ -1,0 +1,44 @@
+{
+  "float": [
+    {
+      "name": "space_xs",
+      "value": "4vp"
+    },
+    {
+      "name": "space_sm",
+      "value": "8vp"
+    },
+    {
+      "name": "space_md",
+      "value": "12vp"
+    },
+    {
+      "name": "space_lg",
+      "value": "16vp"
+    },
+    {
+      "name": "space_xl",
+      "value": "24vp"
+    },
+    {
+      "name": "radius_sm",
+      "value": "6vp"
+    },
+    {
+      "name": "radius_md",
+      "value": "10vp"
+    },
+    {
+      "name": "radius_lg",
+      "value": "14vp"
+    },
+    {
+      "name": "radius_card",
+      "value": "12vp"
+    },
+    {
+      "name": "radius_pill",
+      "value": "999vp"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "shiweiji",
+  "version": "1.0.0",
+  "description": "拾味记 · HarmonyOS 美食生活 App — 让每一顿饭，都有值得记录的故事。",
+  "main": "index.js",
+  "scripts": {},
+  "author": "Shí Wèi Jì Team",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@ohos/hypium": "1.0.19"
+  },
+  "devDependencies": {
+    "@ohos/hvigor": "5.0.0",
+    "@ohos/hvigor-ohos-plugin": "5.0.0",
+    "typescript": "~5.3.0"
+  }
+}

@@ -1,0 +1,23 @@
+# DevEco Studio & IntelliJ
+.idea/
+*.iml
+.gradle/
+
+# Build outputs
+build/
+entry/build/
+.preview/
+entry/.preview/
+.hvigor/
+entry/.hvigor/
+
+# Local properties & caches
+local.properties
+
+# Dependencies
+node_modules/
+oh_modules/
+
+# OS specific
+.DS_Store
+Thumbs.db

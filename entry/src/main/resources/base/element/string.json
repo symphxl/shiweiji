@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "拾味记核心功能模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "拾味记主界面"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "拾味记"
+    },
+    {
+      "name": "app_slogan",
+      "value": "让每一顿饭，都有值得记录的故事。"
+    }
+  ]
+}

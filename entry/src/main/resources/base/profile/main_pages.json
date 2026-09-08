@@ -1,0 +1,15 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/recipe/RecipeDetailPage",
+    "pages/recipe/CookingModePage",
+    "pages/discover/CreatePostPage",
+    "pages/diet/IngredientDetailPage",
+    "pages/diet/FoodHistoryPage",
+    "pages/mine/FridgePage",
+    "pages/mine/ShoppingListPage",
+    "pages/mine/CreateRecipePage",
+    "pages/mine/DietLogPage",
+    "pages/search/SearchPage"
+  ]
+}
