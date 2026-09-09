@@ -12,6 +12,7 @@ import { RecipeItem } from '../../common/models/RecipeModel';
  */
 @Component
 export struct MinePage {
+  @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   @State private state: AppDataState = AppDataState.getInstance();
   @State profile: UserProfile = this.state.userProfile;
   @State familyRecipes: RecipeItem[] = [];
@@ -65,7 +66,7 @@ export struct MinePage {
                 .fontColor(ColorConstants.COLOR_BO)
                 .margin({ top: 3, bottom: 4 })
 
-              Text(`关注 ${this.profile.followingCount} · 粉丝 ${this.profile.followerCount} · 获赞 ${this.profile.likedCount}`)
+              Text(`家常菜谱 ${this.state.recipes.length} 道 · 烹饪打卡 ${this.state.dietLogs.length} 次 · 单机离线纯享`)
                 .fontSize(StyleConstants.FONT_CAPTION)
                 .fontColor(ColorConstants.COLOR_SUMI)
             }
@@ -82,16 +83,16 @@ export struct MinePage {
           width: 1,
           color: ColorConstants.COLOR_DIVIDER
         })
-        .margin({ left: 16, right: 16, top: 12, bottom: 12 })
+        .margin({ left: 16, right: 16, top: this.topSafeHeight + 12, bottom: 12 })
 
-        // 核心数据四宫格
+        // 核心单机数据四宫格
         Row() {
           Column() {
             Text(this.state.recipes.length.toString())
               .fontSize(StyleConstants.FONT_H2)
               .fontWeight(FontWeight.Bold)
               .fontColor(ColorConstants.COLOR_INK)
-            Text('我的菜谱')
+            Text('预置菜谱')
               .fontSize(StyleConstants.FONT_CAPTION)
               .fontColor(ColorConstants.COLOR_BO)
               .margin({ top: 2 })
@@ -103,11 +104,11 @@ export struct MinePage {
           .margin({ right: 6 })
 
           Column() {
-            Text(this.state.collectedRecipeIds.length.toString())
+            Text(this.familyRecipes.length.toString())
               .fontSize(StyleConstants.FONT_H2)
               .fontWeight(FontWeight.Bold)
               .fontColor(ColorConstants.COLOR_INK)
-            Text('收藏')
+            Text('家传私房')
               .fontSize(StyleConstants.FONT_CAPTION)
               .fontColor(ColorConstants.COLOR_BO)
               .margin({ top: 2 })
@@ -158,9 +159,9 @@ export struct MinePage {
         .width('100%')
         .padding({ left: 16, right: 16, bottom: 12 })
 
-        // 功能九宫格入口卡
+        // 功能入口卡（单机工具箱）
         Column() {
-          Text('生活管理')
+          Text('我的厨房管理')
             .fontSize(StyleConstants.FONT_BODY_SM)
             .fontWeight(FontWeight.Bold)
             .fontColor(ColorConstants.COLOR_INK)
@@ -182,27 +183,12 @@ export struct MinePage {
               })
             }
 
-            // 2. 购物清单
-            GridItem() {
-              Column() {
-                Text('🛒')
-                  .fontSize(22)
-                Text('购物清单')
-                  .fontSize(StyleConstants.FONT_CAPTION)
-                  .fontColor(ColorConstants.COLOR_INK)
-                  .margin({ top: 4 })
-              }
-              .onClick(() => {
-                router.pushUrl({ url: 'pages/mine/ShoppingListPage' });
-              })
-            }
-
-            // 3. 创建菜谱
+            // 2. 创建菜谱
             GridItem() {
               Column() {
                 Text('✍️')
                   .fontSize(22)
-                Text('创建菜谱')
+                Text('自创菜谱')
                   .fontSize(StyleConstants.FONT_CAPTION)
                   .fontColor(ColorConstants.COLOR_INK)
                   .margin({ top: 4 })
@@ -212,12 +198,12 @@ export struct MinePage {
               })
             }
 
-            // 4. 饮食记录
+            // 3. 饮食记录
             GridItem() {
               Column() {
                 Text('📔')
                   .fontSize(22)
-                Text('饮食记录')
+                Text('饮食日记')
                   .fontSize(StyleConstants.FONT_CAPTION)
                   .fontColor(ColorConstants.COLOR_INK)
                   .margin({ top: 4 })
@@ -227,40 +213,25 @@ export struct MinePage {
               })
             }
 
-            // 5. 我的动态
-            GridItem() {
-              Column() {
-                Text('📝')
-                  .fontSize(22)
-                Text('我的动态')
-                  .fontSize(StyleConstants.FONT_CAPTION)
-                  .fontColor(ColorConstants.COLOR_INK)
-                  .margin({ top: 4 })
-              }
-              .onClick(() => {
-                promptAction.showToast({ message: '可前往「发现」查看最新动态' });
-              })
-            }
-
-            // 6. 偏好设置
+            // 4. 偏好设置
             GridItem() {
               Column() {
                 Text('⚙️')
                   .fontSize(22)
-                Text('偏好设置')
+                Text('口味偏好')
                   .fontSize(StyleConstants.FONT_CAPTION)
                   .fontColor(ColorConstants.COLOR_INK)
                   .margin({ top: 4 })
               }
               .onClick(() => {
-                promptAction.showToast({ message: '当前偏好：川渝家常 · 微辣鲜香 · 减盐控油' });
+                promptAction.showToast({ message: '偏好已保存：川湘风味 · 家常少油 · 滋补润燥' });
               })
             }
           }
-          .columnsTemplate('1fr 1fr 1fr')
-          .rowsGap(16)
+          .columnsTemplate('1fr 1fr 1fr 1fr')
+          .rowsGap(8)
           .columnsGap(8)
-          .height(140)
+          .height(72)
         }
         .width('100%')
         .padding(StyleConstants.SPACE_MD)

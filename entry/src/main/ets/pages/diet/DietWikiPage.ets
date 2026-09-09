@@ -13,6 +13,7 @@ import { IngredientItem } from '../../common/models/IngredientModel';
  */
 @Component
 export struct DietWikiPage {
+  @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   private ingredients: IngredientItem[] = MockDataService.getInitialIngredients();
   private knowledgeList: CookingKnowledgeItem[] = MockDataService.getCookingKnowledge();
 
@@ -37,7 +38,7 @@ export struct DietWikiPage {
             })
         }
         .width('100%')
-        .padding({ left: 16, right: 16, top: 12, bottom: 8 })
+        .padding({ left: 16, right: 16, top: this.topSafeHeight + 12, bottom: 8 })
 
         // 二十四节气养生卡
         Column() {

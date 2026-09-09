@@ -6,6 +6,7 @@ import { StyleConstants } from '../../common/constants/StyleConstants';
  */
 @Component
 export struct ShiWeiNavBar {
+  @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   @Prop title: string = '';
   @Prop subtitle: string = '';
   @Prop showBack: boolean = true;
@@ -70,12 +71,13 @@ export struct ShiWeiNavBar {
       }
     }
     .width('100%')
-    .height(52)
+    .height(52 + this.topSafeHeight)
     .backgroundColor(ColorConstants.COLOR_XUAN)
-    .padding({ left: 8, right: 8 })
+    .padding({ left: 8, right: 8, top: this.topSafeHeight })
     .border({
       width: { bottom: 1 },
       color: ColorConstants.COLOR_DIVIDER
     })
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP])
   }
 }

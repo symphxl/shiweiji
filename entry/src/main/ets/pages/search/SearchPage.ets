@@ -15,6 +15,7 @@ import { RecipeCard } from '../../components/recipe/RecipeCard';
 @Entry
 @Component
 struct SearchPage {
+  @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   @State private state: AppDataState = AppDataState.getInstance();
   @State searchKeyword: string = '';
   @State activeTab: string = '全部';
@@ -121,7 +122,7 @@ struct SearchPage {
           })
       }
       .width('100%')
-      .padding({ left: 12, right: 16, top: 10, bottom: 8 })
+      .padding({ left: 12, right: 16, top: this.topSafeHeight + 10, bottom: 8 })
 
       // 分类 Tab 栏
       Row() {
@@ -335,5 +336,6 @@ struct SearchPage {
     .width('100%')
     .height('100%')
     .backgroundColor(ColorConstants.COLOR_XUAN)
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 }

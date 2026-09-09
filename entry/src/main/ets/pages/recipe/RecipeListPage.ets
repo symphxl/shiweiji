@@ -8,27 +8,43 @@ import { IngredientChip } from '../../components/recipe/IngredientChip';
 import { MatchModeSegment } from '../../components/recipe/MatchModeSegment';
 import { RecipeCard } from '../../components/recipe/RecipeCard';
 import { EmptyStateView } from '../../components/common/EmptyStateView';
+import { COOK_INGREDIENTS, COOK_CATEGORIES } from '../../common/services/CookRepositoryData';
 
 /**
  * 拾味记 · 食谱选择与匹配页 (Recipe Matcher)
- * 遵循设计文档 Chapter 13.1 (P02) & Chapter 16.1 交互规范
+ * 支持「固定食材库（cook.yunyoujun.cn 40+ 核心食材）」与「我的冰箱」双源选择
+ * 包含精准匹配、模糊匹配、生存模式三档计算引擎
  */
 @Component
 export struct RecipeListPage {
+  @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   @State private state: AppDataState = AppDataState.getInstance();
-  @State selectedIngredients: string[] = ['番茄', '鸡蛋', '洋葱'];
+  @State selectedIngredients: string[] = ['土豆', '茄子', '青椒'];
   @State selectedCookware: string[] = ['炒锅'];
   @State activeMode: string = CommonConstants.MODE_STRICT;
   @State activeCategoryTab: string = '全部';
   @State matchedResults: MatchedRecipeResult[] = [];
 
-  // 基础可选食材清单
-  readonly availableIngredients: string[] = [
-    '番茄', '鸡蛋', '洋葱', '青椒', '五花肉', '里脊肉', '豆腐', '米饭', '面条', '莲藕', '排骨', '秋梨'
-  ];
+  // 食材来源切换：'repository' 固定食材库 | 'fridge' 我的冰箱
+  @State ingredientSource: string = 'repository';
+  // 固定食材库分类过滤
+  @State repoCategoryTab: string = '全部';
 
   aboutToAppear() {
     this.calculateMatches();
+  }
+
+  // 获取当前食材选择面板所展示的食材列表
+  getDisplayedIngredients(): string[] {
+    if (this.ingredientSource === 'fridge') {
+      const fridgeList = this.state.inventory.map(item => item.name);
+      return fridgeList.length > 0 ? fridgeList : ['番茄', '鸡蛋', '洋葱', '青椒', '老豆腐', '米饭'];
+    }
+    // 固定食材库按分类筛选
+    if (this.repoCategoryTab === '全部') {
+      return COOK_INGREDIENTS.map(item => item.name);
+    }
+    return COOK_INGREDIENTS.filter(item => item.category === this.repoCategoryTab).map(item => item.name);
   }
 
   calculateMatches() {
@@ -68,46 +84,115 @@ export struct RecipeListPage {
   build() {
     Scroll() {
       Column() {
-        // 顶部标题
+        // 顶部标题与已选统计
         Row() {
-          Text('食谱 · 智能匹配')
-            .fontSize(StyleConstants.FONT_H2)
-            .fontWeight(FontWeight.Bold)
-            .fontFamily('Songti SC')
-            .fontColor(ColorConstants.COLOR_INK)
+          Column() {
+            Text('食谱 · 智能搭配')
+              .fontSize(StyleConstants.FONT_H2)
+              .fontWeight(FontWeight.Bold)
+              .fontFamily('Songti SC')
+              .fontColor(ColorConstants.COLOR_INK)
+
+            Text('精选 cook 食材库 · 选好食材即刻出菜')
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontColor(ColorConstants.COLOR_BO)
+              .margin({ top: 2 })
+          }
+          .alignItems(HorizontalAlign.Start)
 
           Blank()
 
-          Text(`已选 ${this.selectedIngredients.length} 样食材`)
-            .fontSize(StyleConstants.FONT_CAPTION)
-            .fontColor(ColorConstants.COLOR_ZHU)
+          Row() {
+            Text(`已选 ${this.selectedIngredients.length} 样`)
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(ColorConstants.COLOR_ZHU)
+
+            if (this.selectedIngredients.length > 0) {
+              Text(' · 清空')
+                .fontSize(StyleConstants.FONT_CAPTION)
+                .fontColor(ColorConstants.COLOR_BO)
+                .onClick(() => {
+                  this.selectedIngredients = [];
+                  this.calculateMatches();
+                })
+            }
+          }
         }
         .width('100%')
-        .padding({ left: 16, right: 16, top: 12, bottom: 8 })
+        .padding({ left: 16, right: 16, top: this.topSafeHeight + 12, bottom: 8 })
 
-        // 步骤 ①：选食材
+        // 步骤 ①：选择食材（双来源：固定食材库 vs 我的冰箱）
         Column() {
+          // 食材来源切换 Segment
           Row() {
-            Text('① 我有的食材')
-              .fontSize(StyleConstants.FONT_BODY_SM)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(ColorConstants.COLOR_INK)
+            Button({ type: ButtonType.Normal }) {
+              Row() {
+                Text('🗄 固定食材库')
+                  .fontSize(StyleConstants.FONT_BODY_SM)
+                  .fontWeight(this.ingredientSource === 'repository' ? FontWeight.Bold : FontWeight.Normal)
+                  .fontColor(this.ingredientSource === 'repository' ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
+              }
+            }
+            .layoutWeight(1)
+            .height(34)
+            .backgroundColor(this.ingredientSource === 'repository' ? ColorConstants.COLOR_PAPER : Color.Transparent)
+            .borderRadius(StyleConstants.RADIUS_SM)
+            .onClick(() => {
+              this.ingredientSource = 'repository';
+            })
 
-            Blank()
-
-            Text('清空')
-              .fontSize(StyleConstants.FONT_CAPTION)
-              .fontColor(ColorConstants.COLOR_BO)
-              .onClick(() => {
-                this.selectedIngredients = [];
-                this.calculateMatches();
-              })
+            Button({ type: ButtonType.Normal }) {
+              Row() {
+                Text('🧊 我的冰箱')
+                  .fontSize(StyleConstants.FONT_BODY_SM)
+                  .fontWeight(this.ingredientSource === 'fridge' ? FontWeight.Bold : FontWeight.Normal)
+                  .fontColor(this.ingredientSource === 'fridge' ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
+              }
+            }
+            .layoutWeight(1)
+            .height(34)
+            .backgroundColor(this.ingredientSource === 'fridge' ? ColorConstants.COLOR_PAPER : Color.Transparent)
+            .borderRadius(StyleConstants.RADIUS_SM)
+            .onClick(() => {
+              this.ingredientSource = 'fridge';
+            })
           }
           .width('100%')
-          .margin({ bottom: 8 })
+          .height(40)
+          .backgroundColor('rgba(0, 0, 0, 0.05)')
+          .borderRadius(StyleConstants.RADIUS_MD)
+          .padding(3)
+          .margin({ bottom: 10 })
 
+          // 如果是固定食材库，展示食材类别横向筛选（蔬菜、肉类、水产、蛋奶、豆制品、主食）
+          if (this.ingredientSource === 'repository') {
+            Scroll() {
+              Row() {
+                ForEach(COOK_CATEGORIES, (cat: string) => {
+                  Text(cat)
+                    .fontSize(11)
+                    .fontWeight(this.repoCategoryTab === cat ? FontWeight.Bold : FontWeight.Normal)
+                    .fontColor(this.repoCategoryTab === cat ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_SUMI)
+                    .backgroundColor(this.repoCategoryTab === cat ? 'rgba(158, 43, 37, 0.12)' : Color.Transparent)
+                    .borderRadius(StyleConstants.RADIUS_PILL)
+                    .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+                    .margin({ right: 4 })
+                    .onClick(() => {
+                      this.repoCategoryTab = cat;
+                    })
+                }, (cat: string) => cat)
+              }
+            }
+            .scrollable(ScrollDirection.Horizontal)
+            .scrollBar(BarState.Off)
+            .width('100%')
+            .margin({ bottom: 10 })
+          }
+
+          // 食材 Chip 容器
           Flex({ wrap: FlexWrap.Wrap }) {
-            ForEach(this.availableIngredients, (name: string) => {
+            ForEach(this.getDisplayedIngredients(), (name: string) => {
               IngredientChip({
                 label: name,
                 isSelected: this.selectedIngredients.includes(name),
@@ -219,7 +304,7 @@ export struct RecipeListPage {
           Row() {
             Text(
               this.activeMode === CommonConstants.MODE_STRICT ? '精准匹配 · 食材齐全可做' :
-              (this.activeMode === CommonConstants.MODE_FUZZY ? '模糊匹配 · 差一点也能做' : '生存模式 · 极简可做')
+              (this.activeMode === CommonConstants.MODE_FUZZY ? '模糊匹配 · 差一点也能做' : '生存模式 · 极简食材可做')
             )
               .fontSize(StyleConstants.FONT_BODY)
               .fontWeight(FontWeight.Bold)
@@ -227,7 +312,7 @@ export struct RecipeListPage {
 
             Blank()
 
-            Text(`${this.matchedResults.length} 道`)
+            Text(`${this.matchedResults.length} 道可做`)
               .fontSize(StyleConstants.FONT_CAPTION)
               .fontWeight(FontWeight.Bold)
               .fontColor(ColorConstants.COLOR_ZHU)
@@ -239,10 +324,10 @@ export struct RecipeListPage {
             EmptyStateView({
               icon: '🍃',
               title: '当前模式下暂无匹配菜谱',
-              desc: '试试切换为「模糊匹配」或多选 1–2 味食材',
-              buttonText: '重置食材推荐',
+              desc: '试试勾选更多食材，或切换为「模糊匹配」查看近邻菜谱',
+              buttonText: '换一组推荐食材（土豆、茄子、青椒）',
               onButtonClick: () => {
-                this.selectedIngredients = ['番茄', '鸡蛋', '洋葱'];
+                this.selectedIngredients = ['土豆', '茄子', '青椒'];
                 this.activeMode = CommonConstants.MODE_STRICT;
                 this.calculateMatches();
               }
@@ -253,7 +338,7 @@ export struct RecipeListPage {
                 recipe: res.recipe,
                 matchBadge: res.matchBadge,
                 badgeColor: res.badgeColor,
-                missingText: res.missingIngredients.length > 0 ? `缺：${res.missingIngredients.join('、')} · 可加入购物清单` : '',
+                missingText: res.missingIngredients.length > 0 ? `缺：${res.missingIngredients.join('、')}` : '',
                 onCardClick: () => {
                   router.pushUrl({
                     url: 'pages/recipe/RecipeDetailPage',

@@ -13,6 +13,8 @@ import { CookStepItem } from '../../components/recipe/CookStepItem';
 @Entry
 @Component
 struct RecipeDetailPage {
+  @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageProp('bottomSafeHeight') bottomSafeHeight: number = 20;
   @State private state: AppDataState = AppDataState.getInstance();
   @State recipe: RecipeItem | null = null;
   @State currentServings: number = 2;
@@ -39,17 +41,17 @@ struct RecipeDetailPage {
     return `${rounded} ${ing.unit}`;
   }
 
-  // 一键将食材加入购物清单
-  addIngredientsToShoppingList() {
+  // 一键将食材备料存入冰箱（单机离线厨房管理）
+  addIngredientsToFridge() {
     if (!this.recipe) {
       return;
     }
     for (let i = 0; i < this.recipe.ingredients.length; i++) {
       const ing = this.recipe.ingredients[i];
       const scaled = Math.round(((ing.baseAmount / this.recipe.servings) * this.currentServings) * 10) / 10;
-      this.state.addShoppingItem(ing.name, scaled, ing.unit, this.recipe.name);
+      this.state.addInventoryItem(ing.name, '备料', scaled, ing.unit, 3, '冷藏');
     }
-    promptAction.showToast({ message: `已将 ${this.recipe.name} 所需食材加入购物清单` });
+    promptAction.showToast({ message: `已将 ${this.recipe.name} 烹饪所需食材存入冰箱` });
   }
 
   build() {
@@ -62,7 +64,7 @@ struct RecipeDetailPage {
               Stack({ alignContent: Alignment.TopStart }) {
                 Column()
                   .width('100%')
-                  .height(230)
+                  .height(230 + this.topSafeHeight)
                   .linearGradient({
                     angle: 155,
                     colors: [
@@ -81,10 +83,11 @@ struct RecipeDetailPage {
                     .margin({ top: 4 })
                 }
                 .width('100%')
-                .height(230)
+                .height(230 + this.topSafeHeight)
+                .padding({ top: this.topSafeHeight })
                 .justifyContent(FlexAlign.Center)
 
-                // 顶部返回与分享悬浮按钮
+                // 顶部返回悬浮按钮
                 Row() {
                   Button({ type: ButtonType.Circle }) {
                     Text('‹')
@@ -98,26 +101,12 @@ struct RecipeDetailPage {
                   .onClick(() => {
                     router.back();
                   })
-
-                  Blank()
-
-                  Button({ type: ButtonType.Circle }) {
-                    Text('↗')
-                      .fontSize(16)
-                      .fontColor(Color.White)
-                  }
-                  .width(36)
-                  .height(36)
-                  .backgroundColor('rgba(0, 0, 0, 0.35)')
-                  .onClick(() => {
-                    promptAction.showToast({ message: '分享面板：微信 / 华为分享 / 复制链接' });
-                  })
                 }
                 .width('100%')
-                .padding({ left: 16, right: 16, top: 12 })
+                .padding({ left: 16, right: 16, top: this.topSafeHeight + 10 })
               }
               .width('100%')
-              .height(230)
+              .height(230 + this.topSafeHeight)
 
               // 浮动标题卡
               Column() {
@@ -290,12 +279,12 @@ struct RecipeDetailPage {
 
                   Blank()
 
-                  Text('＋ 加入购物清单')
+                  Text('＋ 存入冰箱备料')
                     .fontSize(StyleConstants.FONT_CAPTION)
                     .fontWeight(FontWeight.Medium)
                     .fontColor(ColorConstants.COLOR_DAI)
                     .onClick(() => {
-                      this.addIngredientsToShoppingList();
+                      this.addIngredientsToFridge();
                     })
                 }
                 .width('100%')
@@ -375,12 +364,12 @@ struct RecipeDetailPage {
 
           // 底部固定操作栏
           Row() {
-            // 收藏
+            // 收藏（单机想做标记）
             Button({ type: ButtonType.Normal }) {
               Column() {
                 Text(this.isCollected ? '❤️' : '🤍')
                   .fontSize(18)
-                Text(this.isCollected ? '已收藏' : '收藏')
+                Text(this.isCollected ? '想做' : '标记')
                   .fontSize(StyleConstants.FONT_BADGE)
                   .fontColor(this.isCollected ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_SUMI)
               }
@@ -392,7 +381,7 @@ struct RecipeDetailPage {
               if (this.recipe) {
                 this.isCollected = this.state.toggleCollectRecipe(this.recipe.id);
                 promptAction.showToast({
-                  message: this.isCollected ? '已盖章收藏到「想做的菜」' : '已取消收藏'
+                  message: this.isCollected ? '已记录到「想做的菜」' : '已取消标记'
                 });
               }
             })
@@ -417,13 +406,18 @@ struct RecipeDetailPage {
               })
           }
           .width('100%')
-          .height(64)
+          .height(60 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 0))
           .backgroundColor(ColorConstants.COLOR_PAPER)
           .border({
             width: { top: 1 },
             color: ColorConstants.COLOR_DIVIDER
           })
-          .padding({ left: 16, right: 16, top: 8, bottom: 8 })
+          .padding({
+            left: 16,
+            right: 16,
+            top: 8,
+            bottom: this.bottomSafeHeight > 0 ? this.bottomSafeHeight * 0.6 + 8 : 8
+          })
         }
         .width('100%')
         .height('100%')
@@ -432,5 +426,6 @@ struct RecipeDetailPage {
     .width('100%')
     .height('100%')
     .backgroundColor(ColorConstants.COLOR_XUAN)
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 }

@@ -4,6 +4,7 @@ import { InventoryItem, ShoppingListItem } from '../models/InventoryModel';
 import { PostItem } from '../models/PostModel';
 import { FoodHistoryItem, CookingKnowledgeItem } from '../models/FoodHistoryModel';
 import { UserProfile } from '../models/UserModel';
+import { COOK_INGREDIENTS, COOK_RECIPES } from './CookRepositoryData';
 
 /**
  * 拾味记 · 核心模拟数据服务
@@ -14,7 +15,7 @@ export class MockDataService {
    * 预置菜谱库
    */
   static getInitialRecipes(): RecipeItem[] {
-    return [
+    const baseRecipes: RecipeItem[] = [
       {
         id: 'rec_001',
         name: '番茄炒蛋',
@@ -496,134 +497,14 @@ export class MockDataService {
         collectCount: 310
       }
     ];
+    return baseRecipes.concat(COOK_RECIPES);
   }
 
   /**
-   * 8 大类食材百科库
+   * 8 大类食材百科库（源自 cook.yunyoujun.cn 40+ 核心食材）
    */
   static getInitialIngredients(): IngredientItem[] {
-    return [
-      {
-        id: 'ing_tomato',
-        name: '番茄',
-        category: '蔬菜',
-        alias: ['西红柿', '洋柿子'],
-        caloriesPer100g: 15,
-        seasonMonths: '6–9 月（应季大棚四季可得）',
-        keyNutrient: '番茄红素丰富 · 维C 14mg',
-        nutritionSummary: '富含番茄红素与有机酸，抗氧化能力突出，生食补充维C，熟食更利于番茄红素吸收。',
-        pickTips: '表皮光滑无褶皱，手感结实微有弹性，果蒂呈深绿色者最新鲜。',
-        storageTips: '成熟番茄室温通风保存 3–5 天，冷藏会降低风味，建议临期再入冷藏。',
-        bestPairing: '鸡蛋（番茄炒蛋）、牛肉（番茄牛腩）、豆腐',
-        pairingNotice: '未成熟的青番茄含龙葵碱，切勿食用。',
-        cookingSuggestion: '熟吃烹油加热，能大幅促进脂溶性番茄红素释放。'
-      },
-      {
-        id: 'ing_egg',
-        name: '鸡蛋',
-        category: '蛋奶',
-        alias: ['鸡子', '鸡卵'],
-        caloriesPer100g: 147,
-        seasonMonths: '四季常年',
-        keyNutrient: '优质蛋白 13.3g · 卵磷脂丰富',
-        nutritionSummary: '完全蛋白质的天然代表，氨基酸比例与人体极度接近，是家庭最全能的基础食材。',
-        pickTips: '蛋壳微有白霜，表面不发光发涩，手摇无晃动声为新鲜鸡蛋。',
-        storageTips: '大头朝上冷藏保存，保质期约 30 天，存放前不要水洗蛋壳防破坏保护膜。',
-        bestPairing: '番茄、洋葱、面条、米饭、小葱',
-        pairingNotice: '生吃鸡蛋消化吸收率低且有沙门氏菌风险，建议充分加热。',
-        cookingSuggestion: '蛋液加少许清水或料酒，炒制或蒸制都更为水润松软。'
-      },
-      {
-        id: 'ing_onion',
-        name: '洋葱',
-        category: '蔬菜',
-        alias: ['圆葱', '葱头'],
-        caloriesPer100g: 40,
-        seasonMonths: '5–10 月',
-        keyNutrient: '槲皮素 · 前列腺素A',
-        nutritionSummary: '天然抗菌杀菌，含有前列腺素A有助于扩张血管，受热后辛辣转化成醇厚清甜。',
-        pickTips: '表皮干爽紧实，无发芽无软烂，手感沉重者汁水饱满。',
-        storageTips: '常温避光通风干燥处存放，勿与土豆放在一起以免加速发芽。',
-        bestPairing: '牛肉、羊肉、鸡蛋、猪肉',
-        pairingNotice: '患有眼疾或皮肤瘙痒者建议适量控制食用。',
-        cookingSuggestion: '慢火炒透释放焦糖甘甜，快炒保留爽脆微辛。'
-      },
-      {
-        id: 'ing_pork_belly',
-        name: '五花肉',
-        category: '肉类',
-        alias: ['三层肉', '肋条肉'],
-        caloriesPer100g: 349,
-        seasonMonths: '四季常年',
-        keyNutrient: '脂肪与蛋白质丰富 · 脂溶性风味物质',
-        nutritionSummary: '肥瘦相间，层次分明，富含胶原蛋白与肌间脂肪，是中式炖菜与红烧灵魂所在。',
-        pickTips: '肥瘦相间五层以上为佳，肉色鲜红，脂肪洁白微粉，弹性好。',
-        storageTips: '分装保鲜袋冷冻保存，可保存 3 个月；冷藏建议 2 天内烹饪。',
-        bestPairing: '板栗、梅干菜、冬笋、莲藕',
-        pairingNotice: '热量较高，血脂偏高人群适量食用，烹饪时可先煸炒逼出油脂。',
-        cookingSuggestion: '冷水焯水，文火慢炖，最后大火收浓汁，肥而不腻。'
-      },
-      {
-        id: 'ing_green_pepper',
-        name: '青椒',
-        category: '蔬菜',
-        alias: ['甜椒', '大椒'],
-        caloriesPer100g: 22,
-        seasonMonths: '6–10 月',
-        keyNutrient: '维C 高达 62mg · 辣椒素',
-        nutritionSummary: '常见蔬菜中维C翘楚，清爽解腻，增进食欲并促进胃肠蠕动。',
-        pickTips: '椒身硬实饱满，色泽翠绿油亮，掂起来有一定分量。',
-        storageTips: '擦干表面水分，放保鲜袋扎孔冷藏约 7 天。',
-        bestPairing: '猪肉丝、牛肉、鸡蛋、土豆',
-        pairingNotice: '不耐高温久煮，高温久炖维C容易流失。',
-        cookingSuggestion: '大火快炒或者干煸出虎皮纹，能极大激发香气。'
-      },
-      {
-        id: 'ing_lotus_root',
-        name: '莲藕',
-        category: '蔬菜',
-        alias: ['藕', '菡萏根'],
-        caloriesPer100g: 47,
-        seasonMonths: '9–11 月（秋藕最当时）',
-        keyNutrient: '膳食纤维丰富 · 多酚类物质',
-        nutritionSummary: '白露秋分时节的应季佳蔬，润燥止渴，生食清脆甜凉，煨汤粉糯拉丝。',
-        pickTips: '藕节短粗、藕身饱满带泥者佳；外皮发黑或有异味切勿挑选。',
-        storageTips: '带泥莲藕阴凉处常温可存 7 天；切开后浸入淡盐水防氧化。',
-        bestPairing: '排骨、老鸭、花生、红豆',
-        pairingNotice: '含淀粉较多，糖尿病患者需将其计入主食总量。',
-        cookingSuggestion: '九孔白花藕脆嫩宜凉拌清炒；七孔红花藕淀粉足宜慢火煲汤。'
-      },
-      {
-        id: 'ing_tofu',
-        name: '豆腐',
-        category: '豆制品',
-        alias: ['水豆腐', '南豆腐/北豆腐'],
-        caloriesPer100g: 81,
-        seasonMonths: '四季常年',
-        keyNutrient: '大豆植物蛋白 · 钙含量高',
-        nutritionSummary: '大豆经点卤凝聚而成，高蛋白低脂肪，易于人体吸收，含钙质极佳。',
-        pickTips: '北豆腐切面微黄结实，南豆腐细嫩微白，闻之有自然豆香。',
-        storageTips: '浸没在淡盐冷开水中冷藏，每日换水，建议 2 天内吃完。',
-        bestPairing: '大蒜、生抽、蘑菇、鱼肉',
-        pairingNotice: '痛风发作急性期应节制食用。',
-        cookingSuggestion: '烹调前用淡盐开水浸烫几分钟，可去豆腥且不易碎。'
-      },
-      {
-        id: 'ing_rice',
-        name: '米饭',
-        category: '主食',
-        alias: ['大米', '白米'],
-        caloriesPer100g: 116,
-        seasonMonths: '四季常年（秋收新米最佳）',
-        keyNutrient: '碳水化合物 · 复合B族维生素',
-        nutritionSummary: '中国南方人的主粮基底，提供最直接干净的能量补给与温饱满足。',
-        pickTips: '米粒饱满透明，少腹白腹霜，无霉变异味。',
-        storageTips: '米缸放几瓣大蒜或八角密封常温保存，防虫防潮。',
-        bestPairing: '各种下饭菜、鸡蛋、紫菜',
-        pairingNotice: '精白米升糖指数偏高，可适量掺入杂粮糙米。',
-        cookingSuggestion: '做炒饭宜用隔夜冷藏米饭，水分收干更易颗粒分明。'
-      }
-    ];
+    return COOK_INGREDIENTS;
   }
 
   /**

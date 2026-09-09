@@ -2,18 +2,18 @@ import { ColorConstants } from '../common/constants/ColorConstants';
 import { StyleConstants } from '../common/constants/StyleConstants';
 import { HomePage } from './home/HomePage';
 import { RecipeListPage } from './recipe/RecipeListPage';
-import { DiscoverPage } from './discover/DiscoverPage';
 import { DietWikiPage } from './diet/DietWikiPage';
 import { MinePage } from './mine/MinePage';
 
 /**
- * 拾味记 · 主应用五 Tab 容器
- * 遵循设计文档 Chapter 05「五 Tab 信息架构」规范：
- * 首页 / 食谱 / 发现 / 饮食 / 我的
+ * 拾味记 · 主应用四 Tab 容器（单机离线纯享版）
+ * 遵循纯单机架构与全屏沉浸式规范：
+ * 首页 / 食谱 / 饮食 / 我的
  */
 @Entry
 @Component
 struct Index {
+  @StorageProp('bottomSafeHeight') bottomSafeHeight: number = 20;
   @State currentTabIndex: number = 0;
   private tabController: TabsController = new TabsController();
 
@@ -30,7 +30,8 @@ struct Index {
         .fontColor(this.currentTabIndex === index ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
     }
     .width('100%')
-    .height(56)
+    .height(56 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 0))
+    .padding({ bottom: this.bottomSafeHeight > 0 ? this.bottomSafeHeight * 0.6 : 0 })
     .justifyContent(FlexAlign.Center)
   }
 
@@ -52,29 +53,23 @@ struct Index {
         }
         .tabBar(this.TabItemBuilder(0, '🏠', '首页'))
 
-        // Tab 1: 食谱 (食材/厨具匹配 + 三档模式 + 菜谱分类库)
+        // Tab 1: 食谱 (固定食材库 + 我的冰箱 + 三档模式 + 经典组合)
         TabContent() {
           RecipeListPage()
         }
         .tabBar(this.TabItemBuilder(1, '📖', '食谱'))
 
-        // Tab 2: 发现 (饭桌朋友圈动态流 + 晒菜)
-        TabContent() {
-          DiscoverPage()
-        }
-        .tabBar(this.TabItemBuilder(2, '🍚', '发现'))
-
-        // Tab 3: 饮食 (食物百科全书 + 节气 + 食材档案 + 时间线)
+        // Tab 2: 饮食 (食物百科全书 + 节气 + 食材档案 + 时间线)
         TabContent() {
           DietWikiPage()
         }
-        .tabBar(this.TabItemBuilder(3, '🌾', '饮食'))
+        .tabBar(this.TabItemBuilder(2, '🌾', '饮食'))
 
-        // Tab 4: 我的 (个人主页 + 冰箱管理 + 清单 + 自创家传菜)
+        // Tab 3: 我的 (单机主页 + 冰箱管理 + 自创家传菜 + 饮食记录)
         TabContent() {
           MinePage()
         }
-        .tabBar(this.TabItemBuilder(4, '🥡', '我的'))
+        .tabBar(this.TabItemBuilder(3, '🥡', '我的'))
       }
       .scrollable(false)
       .animationDuration(StyleConstants.DURATION_FAST)
@@ -83,7 +78,7 @@ struct Index {
       })
       .backgroundColor(ColorConstants.COLOR_XUAN)
       .barBackgroundColor(ColorConstants.COLOR_PAPER)
-      .barHeight(58)
+      .barHeight(56 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 0))
       .barMode(BarMode.Fixed)
       .border({
         width: { top: 1 },
@@ -93,5 +88,6 @@ struct Index {
     .width('100%')
     .height('100%')
     .backgroundColor(ColorConstants.COLOR_XUAN)
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 }

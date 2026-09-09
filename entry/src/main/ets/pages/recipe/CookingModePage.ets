@@ -14,6 +14,8 @@ import { ShiWeiSeal } from '../../components/common/ShiWeiSeal';
 @Entry
 @Component
 struct CookingModePage {
+  @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageProp('bottomSafeHeight') bottomSafeHeight: number = 20;
   @State private state: AppDataState = AppDataState.getInstance();
   @State recipe: RecipeItem | null = null;
   @State currentStepIndex: number = 0;
@@ -161,7 +163,7 @@ struct CookingModePage {
             })
           }
           .width('100%')
-          .padding({ left: 16, right: 16, top: 18, bottom: 12 })
+          .padding({ left: 16, right: 16, top: this.topSafeHeight + 10, bottom: 12 })
 
           // 核心做菜大字版式
           if (this.currentStep()) {
@@ -286,7 +288,7 @@ struct CookingModePage {
               Text('🎙 支持免触控：屏幕常亮已开启')
                 .fontSize(StyleConstants.FONT_CAPTION)
                 .fontColor('#7D715C')
-                .margin({ bottom: 12 })
+                .margin({ bottom: this.bottomSafeHeight > 0 ? this.bottomSafeHeight * 0.6 + 12 : 12 })
             }
             .layoutWeight(1)
             .width('100%')
@@ -327,7 +329,7 @@ struct CookingModePage {
               .fontColor(ColorConstants.COLOR_CHA)
               .margin({ bottom: 24 })
 
-            Button('📸 去饭桌晒菜打卡')
+            Button('📔 记录到饮食日记')
               .width('100%')
               .height(44)
               .backgroundColor(ColorConstants.COLOR_ZHU)
@@ -338,8 +340,7 @@ struct CookingModePage {
               .margin({ bottom: 10 })
               .onClick(() => {
                 router.replaceUrl({
-                  url: 'pages/discover/CreatePostPage',
-                  params: { recipeId: this.recipe?.id ?? '' }
+                  url: 'pages/mine/DietLogPage'
                 });
               })
 
@@ -376,5 +377,6 @@ struct CookingModePage {
     }
     .width('100%')
     .height('100%')
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 }

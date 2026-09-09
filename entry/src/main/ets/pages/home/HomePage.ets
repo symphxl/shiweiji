@@ -16,6 +16,7 @@ import promptAction from '@ohos.promptAction';
 @Component
 export struct HomePage {
   onSwitchToRecipeTab?: () => void;
+  @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   @State private state: AppDataState = AppDataState.getInstance();
   @State todayRecipes: RecipeItem[] = [];
   @State recommendIndex: number = 0;
@@ -65,7 +66,7 @@ export struct HomePage {
           })
         }
         .width('100%')
-        .padding({ left: 16, right: 16, top: 8, bottom: 8 })
+        .padding({ left: 16, right: 16, top: this.topSafeHeight + 8, bottom: 8 })
 
         // Hero 问候与东方诗意语录
         Column() {
