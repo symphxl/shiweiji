@@ -1,7 +1,10 @@
+import { common } from '@kit.AbilityKit';
 import { RecipeItem } from '../models/RecipeModel';
 import { InventoryItem, ShoppingListItem } from '../models/InventoryModel';
 import { PostItem } from '../models/PostModel';
 import { MockDataService } from './MockDataService';
+import { ProfileStore } from './ProfileStore';
+import { RecipeStore } from './RecipeStore';
 import { UserProfile } from '../models/UserModel';
 
 /**
@@ -24,6 +27,7 @@ export class AppDataState {
   private static instance: AppDataState | null = null;
 
   recipes: RecipeItem[] = [];
+  customRecipes: RecipeItem[] = [];
   inventory: InventoryItem[] = [];
   shoppingList: ShoppingListItem[] = [];
   posts: PostItem[] = [];
@@ -39,6 +43,9 @@ export class AppDataState {
     }
   ];
   userProfile: UserProfile;
+  private context: common.Context | null = null;
+  private profileVersion: number = 0;
+  private recipeVersion: number = 0;
 
   private constructor() {
     this.recipes = MockDataService.getInitialRecipes();
@@ -46,6 +53,8 @@ export class AppDataState {
     this.shoppingList = MockDataService.getInitialShoppingList();
     this.posts = MockDataService.getInitialPosts();
     this.userProfile = MockDataService.getDefaultUserProfile();
+    AppStorage.setOrCreate('profileVersion', 0);
+    AppStorage.setOrCreate('recipeVersion', 0);
   }
 
   static getInstance(): AppDataState {
@@ -187,10 +196,65 @@ export class AppDataState {
     this.posts.unshift(newPost);
   }
 
-  // ================= 自创菜谱 =================
+  // ================= 自创与家常菜谱 =================
   addCustomRecipe(recipe: RecipeItem): void {
-    this.recipes.unshift(recipe);
-    this.userProfile.recipeCount++;
+    recipe.isFamilyRecipe = true;
+    const existIdx = this.customRecipes.findIndex(r => r.id === recipe.id);
+    if (existIdx >= 0) {
+      this.customRecipes[existIdx] = recipe;
+    } else {
+      this.customRecipes.unshift(recipe);
+    }
+
+    const recIdx = this.recipes.findIndex(r => r.id === recipe.id);
+    if (recIdx >= 0) {
+      this.recipes[recIdx] = recipe;
+    } else {
+      this.recipes.unshift(recipe);
+    }
+    this.userProfile.recipeCount = this.recipes.length;
+
+    // 持久化保存至手机本地文件
+    let ctx = this.context;
+    if (!ctx) {
+      try {
+        ctx = getContext() as common.Context;
+        this.context = ctx;
+      } catch (e) {
+        // 忽略
+      }
+    }
+    if (ctx) {
+      RecipeStore.save(ctx, this.customRecipes);
+    }
+
+    // 触发全局响应式变更通知
+    this.recipeVersion += 1;
+    AppStorage.setOrCreate('recipeVersion', this.recipeVersion);
+    this.profileVersion += 1;
+    AppStorage.setOrCreate('profileVersion', this.profileVersion);
+  }
+
+  setContext(context: common.Context): void {
+    this.context = context;
+  }
+
+  // 从本地存储还原自创与家常菜谱
+  restoreCustomRecipes(context: common.Context): void {
+    try {
+      const saved = RecipeStore.restore(context);
+      if (saved && saved.length > 0) {
+        this.customRecipes = saved;
+        this.customRecipes.forEach(r => r.isFamilyRecipe = true);
+        const savedIds = new Set(saved.map(r => r.id));
+        this.recipes = this.customRecipes.concat(this.recipes.filter(r => !savedIds.has(r.id)));
+        this.userProfile.recipeCount = this.recipes.length;
+        this.recipeVersion += 1;
+        AppStorage.setOrCreate('recipeVersion', this.recipeVersion);
+      }
+    } catch (e) {
+      // 容错处理
+    }
   }
 
   // ================= 烹饪打卡记录 =================
@@ -205,5 +269,37 @@ export class AppDataState {
     };
     this.dietLogs.unshift(newLog);
     this.userProfile.dietRecordCount = this.dietLogs.length;
+  }
+
+  // ================= 个人资料与全局初始化 =================
+  restoreProfile(context: common.Context): void {
+    this.context = context;
+    ProfileStore.restore(context, this.userProfile);
+    this.restoreCustomRecipes(context);
+  }
+
+  updateUserProfile(nickname: string, avatarText: string, avatarBg: string, bio: string, location: string, tastePreferences: string[]): void {
+    this.userProfile = {
+      id: this.userProfile.id,
+      nickname: nickname,
+      avatarText: avatarText,
+      avatarBg: avatarBg,
+      bio: bio,
+      location: location,
+      familyRecipeBadge: this.userProfile.familyRecipeBadge,
+      followingCount: this.userProfile.followingCount,
+      followerCount: this.userProfile.followerCount,
+      likedCount: this.userProfile.likedCount,
+      recipeCount: this.userProfile.recipeCount,
+      collectCount: this.userProfile.collectCount,
+      dietRecordCount: this.userProfile.dietRecordCount,
+      fridgeItemCount: this.userProfile.fridgeItemCount,
+      tastePreferences: tastePreferences
+    };
+    this.profileVersion += 1;
+    AppStorage.setOrCreate('profileVersion', this.profileVersion);
+    if (this.context) {
+      ProfileStore.save(this.context, this.userProfile);
+    }
   }
 }

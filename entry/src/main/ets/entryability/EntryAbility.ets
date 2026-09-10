@@ -1,6 +1,7 @@
 import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
+import { AppDataState } from '../common/services/AppDataState';
 
 const DOMAIN = 0x0000;
 const TAG = 'EntryAbility';
@@ -8,6 +9,10 @@ const TAG = 'EntryAbility';
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(DOMAIN, TAG, '%{public}s', 'Ability onCreate');
+    const appState = AppDataState.getInstance();
+    appState.setContext(this.context);
+    appState.restoreProfile(this.context);
+    appState.restoreCustomRecipes(this.context);
   }
 
   onDestroy(): void {

@@ -13,6 +13,8 @@ import { RecipeItem } from '../../common/models/RecipeModel';
 @Component
 export struct MinePage {
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageLink('recipeVersion') @Watch('refreshData') recipeVersion: number = 0;
+  @StorageLink('profileVersion') @Watch('refreshData') profileVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
   @State profile: UserProfile = this.state.userProfile;
   @State familyRecipes: RecipeItem[] = [];
@@ -23,12 +25,40 @@ export struct MinePage {
 
   refreshData() {
     this.profile = this.state.userProfile;
-    this.familyRecipes = this.state.recipes.filter(r => r.isFamilyRecipe);
+    this.familyRecipes = this.state.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_'));
   }
 
   build() {
     Scroll() {
       Column() {
+        // 顶部标题
+        Row() {
+          Column() {
+            Text('我的 · 烟火人间')
+              .fontSize(StyleConstants.FONT_H2)
+              .fontWeight(FontWeight.Bold)
+              .fontFamily('Songti SC')
+              .fontColor(ColorConstants.COLOR_INK)
+
+            Text('一日三餐 · 记录属于家的味道')
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontColor(ColorConstants.COLOR_BO)
+              .margin({ top: 2 })
+          }
+          .alignItems(HorizontalAlign.Start)
+
+          Blank()
+
+          Text('单机离线纯享版')
+            .fontSize(StyleConstants.FONT_BADGE)
+            .fontColor(ColorConstants.COLOR_QING)
+            .backgroundColor('rgba(95, 113, 97, 0.12)')
+            .borderRadius(StyleConstants.RADIUS_PILL)
+            .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+        }
+        .width('100%')
+        .padding({ left: 16, right: 16, top: this.topSafeHeight + 12, bottom: 8 })
+
         // 用户卡片头部
         Column() {
           Row() {
@@ -83,7 +113,7 @@ export struct MinePage {
           width: 1,
           color: ColorConstants.COLOR_DIVIDER
         })
-        .margin({ left: 16, right: 16, top: this.topSafeHeight + 12, bottom: 12 })
+        .margin({ left: 16, right: 16, top: 8, bottom: 12 })
 
         // 核心单机数据四宫格
         Row() {
@@ -268,66 +298,87 @@ export struct MinePage {
           .width('100%')
           .margin({ bottom: 8 })
 
-          ForEach(this.familyRecipes, (rec: RecipeItem) => {
-            Row() {
-              Stack() {
-                Column()
-                  .width(56)
-                  .height(44)
-                  .borderRadius(StyleConstants.RADIUS_SM)
-                  .linearGradient({
-                    angle: 150,
-                    colors: [
-                      [rec.coverGradient[0], 0.0],
-                      [rec.coverGradient[1], 1.0]
-                    ]
-                  })
+          if (this.familyRecipes.length === 0) {
+            Column() {
+              Text('暂无收录的家常菜谱')
+                .fontSize(StyleConstants.FONT_BODY_SM)
+                .fontColor(ColorConstants.COLOR_BO)
+                .margin({ bottom: 4 })
 
-                Text(rec.emoji)
-                  .fontSize(18)
-              }
-              .margin({ right: 10 })
-
-              Column() {
-                Row() {
-                  Text(rec.name)
-                    .fontSize(StyleConstants.FONT_BODY_SM)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor(ColorConstants.COLOR_INK)
-
-                  Text('📌')
-                    .fontSize(12)
-                    .margin({ left: 4 })
-                }
-
-                Text(rec.story.length > 25 ? rec.story.substring(0, 25) + '...' : rec.story)
-                  .fontSize(StyleConstants.FONT_CAPTION)
-                  .fontColor(ColorConstants.COLOR_BO)
-                  .margin({ top: 2 })
-              }
-              .layoutWeight(1)
-              .alignItems(HorizontalAlign.Start)
-
-              Text('查看 ›')
+              Text('点击右上角「＋ 添加家传菜」即可收录到手机本地')
                 .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(ColorConstants.COLOR_ZHU)
+                .fontColor(ColorConstants.COLOR_SUMI)
             }
             .width('100%')
-            .padding(StyleConstants.SPACE_MD)
+            .padding({ top: 24, bottom: 24 })
             .backgroundColor(ColorConstants.COLOR_PAPER)
             .borderRadius(StyleConstants.RADIUS_MD)
             .border({
               width: 1,
               color: ColorConstants.COLOR_DIVIDER
             })
-            .margin({ bottom: 8 })
-            .onClick(() => {
-              router.pushUrl({
-                url: 'pages/recipe/RecipeDetailPage',
-                params: { recipeId: rec.id }
-              });
-            })
-          }, (rec: RecipeItem) => rec.id)
+          } else {
+            ForEach(this.familyRecipes, (rec: RecipeItem) => {
+              Row() {
+                Stack() {
+                  Column()
+                    .width(56)
+                    .height(44)
+                    .borderRadius(StyleConstants.RADIUS_SM)
+                    .linearGradient({
+                      angle: 150,
+                      colors: [
+                        [rec.coverGradient[0], 0.0],
+                        [rec.coverGradient[1], 1.0]
+                      ]
+                    })
+
+                  Text(rec.emoji)
+                    .fontSize(18)
+                }
+                .margin({ right: 10 })
+
+                Column() {
+                  Row() {
+                    Text(rec.name)
+                      .fontSize(StyleConstants.FONT_BODY_SM)
+                      .fontWeight(FontWeight.Bold)
+                      .fontColor(ColorConstants.COLOR_INK)
+
+                    Text('📌')
+                      .fontSize(12)
+                      .margin({ left: 4 })
+                  }
+
+                  Text(rec.story.length > 25 ? rec.story.substring(0, 25) + '...' : rec.story)
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_BO)
+                    .margin({ top: 2 })
+                }
+                .layoutWeight(1)
+                .alignItems(HorizontalAlign.Start)
+
+                Text('查看 ›')
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_ZHU)
+              }
+              .width('100%')
+              .padding(StyleConstants.SPACE_MD)
+              .backgroundColor(ColorConstants.COLOR_PAPER)
+              .borderRadius(StyleConstants.RADIUS_MD)
+              .border({
+                width: 1,
+                color: ColorConstants.COLOR_DIVIDER
+              })
+              .margin({ bottom: 8 })
+              .onClick(() => {
+                router.pushUrl({
+                  url: 'pages/recipe/RecipeDetailPage',
+                  params: { recipeId: rec.id }
+                });
+              })
+            }, (rec: RecipeItem) => rec.id)
+          }
         }
         .width('100%')
         .padding({ left: 16, right: 16, bottom: 30 })
@@ -337,6 +388,7 @@ export struct MinePage {
     .scrollBar(BarState.Off)
     .width('100%')
     .height('100%')
+    .align(Alignment.Top)
     .backgroundColor(ColorConstants.COLOR_XUAN)
   }
 }

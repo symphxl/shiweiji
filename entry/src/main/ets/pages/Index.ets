@@ -17,6 +17,10 @@ struct Index {
   @State currentTabIndex: number = 0;
   private tabController: TabsController = new TabsController();
 
+  onPageShow() {
+    AppStorage.setOrCreate('recipeVersion', Date.now());
+  }
+
   @Builder
   TabItemBuilder(index: number, icon: string, title: string) {
     Column() {

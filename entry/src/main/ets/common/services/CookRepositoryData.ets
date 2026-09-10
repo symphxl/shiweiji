@@ -1300,5 +1300,99 @@ export const COOK_RECIPES: RecipeItem[] = [
     isFamilyRecipe: false,
     likeCount: 3600,
     collectCount: 2800
+  },
+  {
+    id: 'rec_031',
+    name: '番茄豆腐蛋花汤',
+    coverGradient: ['#C05A50', '#6B1F17'],
+    emoji: '🥣',
+    region: '国民家常 · 酸甜暖润',
+    difficulty: '简单',
+    cookTimeMin: 12,
+    servings: 2,
+    calories: 130,
+    tags: ['汤羹', '快手菜', '家常菜'],
+    story: '「番茄炒出浓红果酸，嫩豆腐如白玉漂浮，淋上一圈金黄蛋花。饭前喝一碗，开胃暖心。」',
+    storyAuthor: '家常食单',
+    ingredients: [
+      { id: 'c_ing_221', name: '番茄', baseAmount: 2, unit: '个', isRequired: true },
+      { id: 'c_ing_222', name: '嫩豆腐', baseAmount: 1, unit: '块', isRequired: true },
+      { id: 'c_ing_223', name: '鸡蛋', baseAmount: 2, unit: '个', isRequired: true },
+      { id: 'c_ing_224', name: '小葱', baseAmount: 1, unit: '根', isRequired: false },
+      { id: 'c_ing_225', name: '盐', baseAmount: 3, unit: '克', isRequired: true }
+    ],
+    steps: [
+      { stepNumber: 1, title: '备菜切块', description: '番茄去皮切小丁，嫩豆腐切小丁，鸡蛋充分搅打成蛋液，小葱切碎。', heatLevel: '准备', durationSec: 0, tip: '番茄切小丁更容易炒出红亮果汁。' },
+      { stepNumber: 2, title: '炒浓番茄', description: '热锅少油下番茄丁加少许盐煸炒出浓沙，倒入两大碗开水大火煮沸。', heatLevel: '大火', durationSec: 120, tip: '加入开水汤色浓郁不浑浊。' },
+      { stepNumber: 3, title: '入豆腐慢滚', description: '下入嫩豆腐丁煮2分钟，调入适量水淀粉勾薄芡。', heatLevel: '中火', durationSec: 120, tip: '薄芡能让蛋花漂浮如丝绸。' },
+      { stepNumber: 4, title: '淋入蛋花', description: '转小火沿锅边转圈淋入蛋液，待蛋花凝固轻推散开，撒葱花和香油出锅。', heatLevel: '小火', durationSec: 30, tip: '蛋液淋入后不要立即搅拌，稍凝固再推。' }
+    ],
+    requiredCookware: ['炒锅'],
+    isFamilyRecipe: false,
+    likeCount: 2890,
+    collectCount: 1720
+  },
+  {
+    id: 'rec_032',
+    name: '菌菇三鲜豆腐汤',
+    coverGradient: ['#7A6248', '#382B1C'],
+    emoji: '🍲',
+    region: '江南水乡 · 鲜润清甜',
+    difficulty: '简单',
+    cookTimeMin: 15,
+    servings: 2,
+    calories: 145,
+    tags: ['汤羹', '滋补', '轻食健康'],
+    story: '「金针菇的脆韧、木耳的爽滑与豆腐的软嫩，在热汤中交织出山林与田野的原生鲜香，不着浓墨，却鲜入肌理。」',
+    storyAuthor: '山野食话',
+    ingredients: [
+      { id: 'c_ing_231', name: '金针菇', baseAmount: 100, unit: '克', isRequired: true },
+      { id: 'c_ing_232', name: '老豆腐', baseAmount: 1, unit: '块', isRequired: true },
+      { id: 'c_ing_233', name: '木耳', baseAmount: 20, unit: '克', isRequired: false },
+      { id: 'c_ing_234', name: '鸡蛋', baseAmount: 1, unit: '个', isRequired: false },
+      { id: 'c_ing_235', name: '生姜', baseAmount: 2, unit: '片', isRequired: false },
+      { id: 'c_ing_236', name: '盐', baseAmount: 3, unit: '克', isRequired: true }
+    ],
+    steps: [
+      { stepNumber: 1, title: '食材准备', description: '金针菇去根洗净，木耳泡发撕成小朵，老豆腐切片。', heatLevel: '准备', durationSec: 0, tip: '金针菇撕小撮受热更均匀。' },
+      { stepNumber: 2, title: '炝香底油', description: '锅内倒少许油下姜片爆香，放入金针菇与木耳煸炒出香味。', heatLevel: '中火', durationSec: 60, tip: '菌菇煸炒后香味更浓厚。' },
+      { stepNumber: 3, title: '下汤炖煮', description: '加入两大碗开水，下入老豆腐片，大火烧开转中火炖煮8分钟。', heatLevel: '中大火', durationSec: 480, tip: '老豆腐炖煮后气孔吸饱鲜汤。' },
+      { stepNumber: 4, title: '调味出锅', description: '调入少许盐与白胡椒粉，关火淋入蛋液撒入葱花。', heatLevel: '小火', durationSec: 30, tip: '白胡椒粉提鲜驱寒。' }
+    ],
+    requiredCookware: ['炒锅'],
+    isFamilyRecipe: false,
+    likeCount: 1980,
+    collectCount: 1350
+  },
+  {
+    id: 'rec_033',
+    name: '鲫鱼豆腐汤',
+    coverGradient: ['#5C8276', '#1E3831'],
+    emoji: '🐟',
+    region: '江南水乡 · 奶白滋补',
+    difficulty: '中等',
+    cookTimeMin: 25,
+    servings: 3,
+    calories: 220,
+    tags: ['汤羹', '滋补', '高蛋白'],
+    story: '「两面煎黄的鲫鱼遇到滚烫开水，油脂与蛋白质剧烈乳化，瞬间滚出如牛奶般的浓白醇汤，配以嫩豆腐，温润甘甜。」',
+    storyAuthor: '水乡私房',
+    ingredients: [
+      { id: 'c_ing_241', name: '鲫鱼', baseAmount: 1, unit: '条', isRequired: true },
+      { id: 'c_ing_242', name: '嫩豆腐', baseAmount: 1, unit: '块', isRequired: true },
+      { id: 'c_ing_243', name: '生姜', baseAmount: 4, unit: '片', isRequired: false },
+      { id: 'c_ing_244', name: '小葱', baseAmount: 2, unit: '根', isRequired: false },
+      { id: 'c_ing_245', name: '盐', baseAmount: 4, unit: '克', isRequired: true }
+    ],
+    steps: [
+      { stepNumber: 1, title: '处理沥干', description: '鲫鱼去鳞洗净内膜，鱼身两面划花刀，用厨房纸彻底擦干表面水分。', heatLevel: '准备', durationSec: 0, tip: '擦干鱼皮是煎鱼不破皮的关键。' },
+      { stepNumber: 2, title: '热锅煎鱼', description: '锅烧热倒油，下姜片抹锅，放入鲫鱼中小火慢煎至两面金黄微焦。', heatLevel: '中小火', durationSec: 360, tip: '下锅后切勿急于翻动，等定型再翻面。' },
+      { stepNumber: 3, title: '冲入开水', description: '直接倒入滚烫开水没过鱼身，大火剧烈翻滚沸腾10分钟熬出奶白汤色。', heatLevel: '大火', durationSec: 600, tip: '必须加开水且保持大火翻滚才能乳化出奶白汤。' },
+      { stepNumber: 4, title: '下豆腐调味', description: '加入豆腐块转中小火慢炖10分钟，起锅前加盐与白胡椒粉，撒葱花。', heatLevel: '中小火', durationSec: 600, tip: '盐最后放，鱼肉更鲜嫩。' }
+    ],
+    requiredCookware: ['炒锅'],
+    isFamilyRecipe: false,
+    likeCount: 3260,
+    collectCount: 2190
   }
 ];

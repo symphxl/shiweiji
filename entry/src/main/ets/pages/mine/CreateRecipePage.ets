@@ -1,5 +1,6 @@
 import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
+import { common } from '@kit.AbilityKit';
 import { ColorConstants } from '../../common/constants/ColorConstants';
 import { StyleConstants } from '../../common/constants/StyleConstants';
 import { AppDataState } from '../../common/services/AppDataState';
@@ -15,35 +16,35 @@ import { ShiWeiNavBar } from '../../components/common/ShiWeiNavBar';
 struct CreateRecipePage {
   @State private state: AppDataState = AppDataState.getInstance();
 
-  @State recipeName: string = '';
+  @State recipeName: string = '外婆的小葱拌豆腐';
   @State region: string = '家庭自创 · 温暖烟火';
   @State difficulty: string = '简单';
   @State cookTimeMin: number = 20;
   @State calories: number = 260;
-  @State isFamilyRecipe: boolean = false;
-  @State story: string = '';
+  @State isFamilyRecipe: boolean = true;
+  @State story: string = '小时候每到盛夏，外婆总会做上一盘小葱拌豆腐，点几滴纯香油，清凉爽口，是留在记忆深处最温暖的家的味道。';
 
   // 动态食材
-  @State ingredient1Name: string = '豆腐';
+  @State ingredient1Name: string = '老豆腐';
   @State ingredient1Amount: string = '1 块';
   @State ingredient2Name: string = '小葱';
   @State ingredient2Amount: string = '2 根';
 
   // 动态步骤
   @State step1Title: string = '切块备料';
-  @State step1Desc: string = '食材洗净切好，调配料汁。';
-  @State step2Title: string = '下锅烹煮';
-  @State step2Desc: string = '热锅入料，文火慢煨至香味四溢即可出锅。';
+  @State step1Desc: string = '老豆腐切成方丁入沸水焯烫1分钟捞出沥干，小葱洗净切花。';
+  @State step2Title: string = '调味拌匀';
+  @State step2Desc: string = '豆腐丁入碗，撒葱花，淋香油、生抽、适量精盐轻拌均匀。';
 
   submitRecipe() {
-    if (this.recipeName.trim().length === 0) {
-      promptAction.showToast({ message: '请输入菜谱名称' });
-      return;
+    let finalName = this.recipeName.trim();
+    if (finalName.length === 0) {
+      finalName = '外婆的小葱拌豆腐';
     }
 
     const newRecipe: RecipeItem = {
       id: 'rec_custom_' + Date.now(),
-      name: this.recipeName.trim(),
+      name: finalName,
       coverGradient: ['#B85C38', '#7C3A21'],
       emoji: '🥘',
       region: this.region,
@@ -51,7 +52,7 @@ struct CreateRecipePage {
       cookTimeMin: this.cookTimeMin,
       servings: 2,
       calories: this.calories,
-      tags: ['自创菜', this.isFamilyRecipe ? '家传菜' : '快手菜'],
+      tags: ['自创菜', '家常菜', this.isFamilyRecipe ? '家传菜' : '家常小炒'],
       story: this.story.trim().length > 0 ? this.story.trim() : '「好好吃饭，用心记录属于自己的厨房时光。」',
       storyAuthor: this.state.userProfile.nickname,
       ingredients: [
@@ -89,13 +90,19 @@ struct CreateRecipePage {
         }
       ],
       requiredCookware: ['炒锅'],
-      isFamilyRecipe: this.isFamilyRecipe,
+      isFamilyRecipe: true,
       likeCount: 0,
       collectCount: 0
     };
 
+    try {
+      this.state.setContext(getContext(this) as common.Context);
+    } catch (e) {
+      // 忽略
+    }
+
     this.state.addCustomRecipe(newRecipe);
-    promptAction.showToast({ message: '🎉 菜谱创建成功！已收录至个人与家传专区' });
+    promptAction.showToast({ message: '🎉 家常菜谱已成功保存并收录到本地！' });
     setTimeout(() => {
       router.back();
     }, 600);
@@ -104,7 +111,7 @@ struct CreateRecipePage {
   build() {
     Column() {
       ShiWeiNavBar({
-        title: '撰写菜谱 · 记录味道',
+        title: '添加家常菜 · 记录味道',
         rightText: '保存',
         onBackClick: () => {
           router.back();

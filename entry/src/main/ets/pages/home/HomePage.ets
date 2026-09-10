@@ -25,17 +25,123 @@ export struct HomePage {
     this.refreshTodayRecipes();
   }
 
+  private isSoupRecipe(recipe: RecipeItem): boolean {
+    if (!recipe) {
+      return false;
+    }
+    return recipe.name.includes('汤') ||
+      recipe.tags.some((t: string) => t.includes('汤') || t.includes('羹'));
+  }
+
+  private isStapleRecipe(recipe: RecipeItem): boolean {
+    if (!recipe) {
+      return false;
+    }
+    return recipe.name.includes('面') || recipe.name.includes('饭');
+  }
+
+  private isMeatRecipe(recipe: RecipeItem): boolean {
+    if (!recipe || this.isSoupRecipe(recipe)) {
+      return false;
+    }
+    const meatKeywords = [
+      '肉', '排骨', '鸡翅', '鸡胸', '鸡丁', '牛肉', '牛腩', '羊肉',
+      '鲜虾', '虾仁', '鲈鱼', '鲫鱼', '腊肠', '里脊', '五花肉'
+    ];
+    if (meatKeywords.some((w: string) => recipe.name.includes(w))) {
+      return true;
+    }
+    return recipe.ingredients.some((ing) =>
+      meatKeywords.some((w: string) => ing.name.includes(w)) &&
+      !ing.name.includes('鸡蛋') && !ing.name.includes('蛋')
+    );
+  }
+
+  private getRecipeRoleBadge(recipe: RecipeItem, index: number): string {
+    if (this.isSoupRecipe(recipe) || index === 3) {
+      return '一汤 · 养生汤';
+    }
+    if (index === 0) {
+      return '三菜 · 荤香主菜';
+    } else if (index === 1) {
+      return '三菜 · 清爽时蔬';
+    } else {
+      return '三菜 · 家常小炒';
+    }
+  }
+
+  private getRecipeRoleColor(recipe: RecipeItem, index: number): string {
+    if (this.isSoupRecipe(recipe) || index === 3) {
+      return ColorConstants.COLOR_JIN;
+    }
+    if (index === 0) {
+      return ColorConstants.COLOR_ZHU;
+    } else if (index === 1) {
+      return ColorConstants.COLOR_QING;
+    } else {
+      return ColorConstants.COLOR_CHA;
+    }
+  }
+
   refreshTodayRecipes() {
     const all = this.state.recipes;
-    if (all.length >= 2) {
-      const start = (this.recommendIndex * 2) % all.length;
-      this.todayRecipes = all.slice(start, start + 2);
-      if (this.todayRecipes.length < 2) {
-        this.todayRecipes = all.slice(0, 2);
-      }
-    } else {
-      this.todayRecipes = all;
+    if (all.length === 0) {
+      this.todayRecipes = [];
+      return;
     }
+
+    // 分离汤羹
+    const soups = all.filter((r: RecipeItem) => this.isSoupRecipe(r));
+    // 菜肴优先排除主食（面、饭）与汤类
+    let dishes = all.filter((r: RecipeItem) => !this.isSoupRecipe(r) && !this.isStapleRecipe(r));
+    if (dishes.length < 3) {
+      dishes = all.filter((r: RecipeItem) => !this.isSoupRecipe(r));
+    }
+
+    // 分离荤菜与素菜
+    const meats = dishes.filter((r: RecipeItem) => this.isMeatRecipe(r));
+    const vegs = dishes.filter((r: RecipeItem) => !this.isMeatRecipe(r));
+
+    const result: RecipeItem[] = [];
+
+    // 1. 荤菜（招牌主菜）
+    if (meats.length > 0) {
+      result.push(meats[this.recommendIndex % meats.length]);
+    }
+
+    // 2. 素菜（清爽时蔬）
+    const availableVegs = vegs.filter((v: RecipeItem) => !result.some((r: RecipeItem) => r.id === v.id));
+    if (availableVegs.length > 0) {
+      result.push(availableVegs[this.recommendIndex % availableVegs.length]);
+    }
+
+    // 3. 家常小炒 / 第三道菜（从未选菜品中挑选）
+    const remainingDishes = dishes.filter((d: RecipeItem) => !result.some((r: RecipeItem) => r.id === d.id));
+    if (remainingDishes.length > 0) {
+      result.push(remainingDishes[(this.recommendIndex * 2 + 1) % remainingDishes.length]);
+    }
+
+    // 兜底补齐3道菜
+    while (result.length < 3 && dishes.length > result.length) {
+      const fallback = dishes.find((d: RecipeItem) => !result.some((r: RecipeItem) => r.id === d.id));
+      if (fallback) {
+        result.push(fallback);
+      } else {
+        break;
+      }
+    }
+
+    // 4. 一汤（养生靓汤）
+    if (soups.length > 0) {
+      result.push(soups[this.recommendIndex % soups.length]);
+    } else {
+      const fallbackAll = all.filter((a: RecipeItem) => !result.some((r: RecipeItem) => r.id === a.id));
+      if (fallbackAll.length > 0) {
+        result.push(fallbackAll[0]);
+      }
+    }
+
+    this.todayRecipes = result;
   }
 
   build() {
@@ -193,7 +299,7 @@ export struct HomePage {
         .width('100%')
         .padding({ left: 16, right: 16 })
 
-        // 今日推荐三餐
+        // 今日推荐 · 三菜一汤
         Column() {
           Row() {
             Row() {
@@ -204,6 +310,14 @@ export struct HomePage {
                 .fontSize(StyleConstants.FONT_BODY)
                 .fontWeight(FontWeight.Bold)
                 .fontColor(ColorConstants.COLOR_INK)
+              Text('三菜一汤')
+                .fontSize(10)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(ColorConstants.COLOR_ZHU)
+                .backgroundColor('rgba(158, 43, 37, 0.08)')
+                .borderRadius(StyleConstants.RADIUS_PILL)
+                .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                .margin({ left: 6 })
             }
 
             Blank()
@@ -214,17 +328,17 @@ export struct HomePage {
               .onClick(() => {
                 this.recommendIndex++;
                 this.refreshTodayRecipes();
-                promptAction.showToast({ message: '已为您换一组应季推荐' });
+                promptAction.showToast({ message: '已为您换一组三菜一汤推荐' });
               })
           }
           .width('100%')
           .margin({ bottom: 8 })
 
-          ForEach(this.todayRecipes, (recipe: RecipeItem) => {
+          ForEach(this.todayRecipes, (recipe: RecipeItem, index: number) => {
             RecipeCard({
               recipe: recipe,
-              matchBadge: '食材齐全',
-              badgeColor: ColorConstants.COLOR_QING,
+              matchBadge: this.getRecipeRoleBadge(recipe, index),
+              badgeColor: this.getRecipeRoleColor(recipe, index),
               onCardClick: () => {
                 router.pushUrl({
                   url: 'pages/recipe/RecipeDetailPage',
