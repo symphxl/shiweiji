@@ -5,6 +5,7 @@ import { PostItem } from '../models/PostModel';
 import { FoodHistoryItem, CookingKnowledgeItem } from '../models/FoodHistoryModel';
 import { UserProfile } from '../models/UserModel';
 import { COOK_INGREDIENTS, COOK_RECIPES } from './CookRepositoryData';
+import { EXCEL_RECIPES } from '../data/ExcelRecipesData';
 
 /**
  * 拾味记 · 核心模拟数据服务
@@ -497,7 +498,7 @@ export class MockDataService {
         collectCount: 310
       }
     ];
-    return baseRecipes.concat(COOK_RECIPES);
+    return baseRecipes.concat(COOK_RECIPES).concat(EXCEL_RECIPES);
   }
 
   /**

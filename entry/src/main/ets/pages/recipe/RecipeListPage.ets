@@ -29,22 +29,66 @@ export struct RecipeListPage {
   @State ingredientSource: string = 'repository';
   // 固定食材库分类过滤
   @State repoCategoryTab: string = '全部';
+  // 食材搜索关键字
+  @State ingredientSearchKey: string = '';
+  // 是否展开全部食材（当未处于搜索状态且食材过多时）
+  @State isExpandedIngredients: boolean = false;
+  // 默认收起时展示的最大食材数
+  private readonly COLLAPSED_LIMIT: number = 14;
 
   aboutToAppear() {
     this.calculateMatches();
   }
 
-  // 获取当前食材选择面板所展示的食材列表
-  getDisplayedIngredients(): string[] {
+  // 获取经过搜索和分类过滤后的所有候选食材列表
+  getAllCandidateIngredients(): string[] {
+    let list: string[] = [];
     if (this.ingredientSource === 'fridge') {
       const fridgeList = this.state.inventory.map(item => item.name);
-      return fridgeList.length > 0 ? fridgeList : ['番茄', '鸡蛋', '洋葱', '青椒', '老豆腐', '米饭'];
+      list = fridgeList.length > 0 ? fridgeList : ['番茄', '鸡蛋', '洋葱', '青椒', '老豆腐', '米饭'];
+    } else {
+      if (this.repoCategoryTab === '全部') {
+        list = COOK_INGREDIENTS.map(item => item.name);
+      } else {
+        list = COOK_INGREDIENTS.filter(item => item.category === this.repoCategoryTab).map(item => item.name);
+      }
     }
-    // 固定食材库按分类筛选
-    if (this.repoCategoryTab === '全部') {
-      return COOK_INGREDIENTS.map(item => item.name);
+
+    const kw = this.ingredientSearchKey.trim().toLowerCase();
+    if (kw.length > 0) {
+      list = list.filter(name => {
+        if (name.toLowerCase().includes(kw)) {
+          return true;
+        }
+        // 支持别名模糊匹配
+        const matchedObj = COOK_INGREDIENTS.find(item => item.name === name);
+        if (matchedObj && matchedObj.alias && matchedObj.alias.some(a => a.toLowerCase().includes(kw))) {
+          return true;
+        }
+        return false;
+      });
     }
-    return COOK_INGREDIENTS.filter(item => item.category === this.repoCategoryTab).map(item => item.name);
+    return list;
+  }
+
+  // 获取当前实际渲染的食材列表（若食材过多且未展开，只截取前部）
+  getDisplayedIngredients(): string[] {
+    const candidates = this.getAllCandidateIngredients();
+    if (this.ingredientSearchKey.trim().length > 0 || this.isExpandedIngredients) {
+      return candidates;
+    }
+    if (candidates.length > this.COLLAPSED_LIMIT) {
+      return candidates.slice(0, this.COLLAPSED_LIMIT);
+    }
+    return candidates;
+  }
+
+  // 判断是否需要展示省略号/... 展开按钮
+  shouldShowExpandButton(): boolean {
+    if (this.ingredientSearchKey.trim().length > 0) {
+      return false;
+    }
+    return this.getAllCandidateIngredients().length > this.COLLAPSED_LIMIT;
   }
 
   calculateMatches() {
@@ -163,9 +207,48 @@ export struct RecipeListPage {
           .backgroundColor('rgba(0, 0, 0, 0.05)')
           .borderRadius(StyleConstants.RADIUS_MD)
           .padding(3)
+          .margin({ bottom: 8 })
+
+          // 食材搜索栏（放在「固定食材库」「我的冰箱」这一行下）
+          Row() {
+            Text('🔍')
+              .fontSize(13)
+              .margin({ right: 6 })
+
+            TextInput({
+              placeholder: this.ingredientSource === 'repository' ? '搜索固定食材（如：鸡蛋、牛肉、土豆）...' : '搜索我的冰箱食材...',
+              text: this.ingredientSearchKey
+            })
+              .layoutWeight(1)
+              .height(34)
+              .backgroundColor(Color.Transparent)
+              .fontSize(StyleConstants.FONT_BODY_SM)
+              .onChange((val: string) => {
+                this.ingredientSearchKey = val;
+              })
+
+            if (this.ingredientSearchKey.length > 0) {
+              Text('✕')
+                .fontSize(13)
+                .fontColor(ColorConstants.COLOR_BO)
+                .padding(4)
+                .onClick(() => {
+                  this.ingredientSearchKey = '';
+                })
+            }
+          }
+          .width('100%')
+          .height(36)
+          .backgroundColor('rgba(0, 0, 0, 0.03)')
+          .borderRadius(StyleConstants.RADIUS_PILL)
+          .border({
+            width: 1,
+            color: ColorConstants.COLOR_DIVIDER
+          })
+          .padding({ left: 10, right: 10 })
           .margin({ bottom: 10 })
 
-          // 如果是固定食材库，展示食材类别横向筛选（蔬菜、肉类、水产、蛋奶、豆制品、主食）
+          // 如果是固定食材库，展示食材类别横向筛选（蔬菜、肉类、水产、蛋奶豆、主食）
           if (this.ingredientSource === 'repository') {
             Scroll() {
               Row() {
@@ -190,19 +273,51 @@ export struct RecipeListPage {
             .margin({ bottom: 10 })
           }
 
-          // 食材 Chip 容器
-          Flex({ wrap: FlexWrap.Wrap }) {
-            ForEach(this.getDisplayedIngredients(), (name: string) => {
-              IngredientChip({
-                label: name,
-                isSelected: this.selectedIngredients.includes(name),
-                onChipClick: () => {
-                  this.toggleIngredient(name);
+          // 食材 Chip 容器（支持省略号...展开/收起）
+          if (this.getAllCandidateIngredients().length === 0) {
+            Row() {
+              Text(`未找到与 "${this.ingredientSearchKey}" 相关的食材`)
+                .fontSize(StyleConstants.FONT_CAPTION)
+                .fontColor(ColorConstants.COLOR_BO)
+                .padding({ top: 12, bottom: 12 })
+            }
+            .width('100%')
+            .justifyContent(FlexAlign.Center)
+          } else {
+            Flex({ wrap: FlexWrap.Wrap }) {
+              ForEach(this.getDisplayedIngredients(), (name: string) => {
+                IngredientChip({
+                  label: name,
+                  isSelected: this.selectedIngredients.includes(name),
+                  onChipClick: () => {
+                    this.toggleIngredient(name);
+                  }
+                })
+              }, (name: string) => name)
+
+              // 食材过多时展示省略号/... 展开与收起胶囊
+              if (this.shouldShowExpandButton()) {
+                Row() {
+                  Text(this.isExpandedIngredients ? '收起 ⌃' : `... 展开 (${this.getAllCandidateIngredients().length}) ⌄`)
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor(ColorConstants.COLOR_ZHU)
                 }
-              })
-            }, (name: string) => name)
+                .backgroundColor('rgba(158, 43, 37, 0.08)')
+                .border({
+                  width: 1,
+                  color: ColorConstants.COLOR_ZHU
+                })
+                .borderRadius(StyleConstants.RADIUS_PILL)
+                .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+                .margin({ right: 6, bottom: 6 })
+                .onClick(() => {
+                  this.isExpandedIngredients = !this.isExpandedIngredients;
+                })
+              }
+            }
+            .width('100%')
           }
-          .width('100%')
         }
         .width('100%')
         .padding(StyleConstants.SPACE_MD)
