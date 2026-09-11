@@ -2793,7 +2793,7 @@ export const EXCEL_RECIPES: RecipeItem[] = [
       },
       {
         "id": "ing_xl_39_1",
-        "name": "米饭",
+        "name": "米",
         "baseAmount": 1,
         "unit": "份",
         "isRequired": true

@@ -5,6 +5,9 @@ import { PostItem } from '../models/PostModel';
 import { MockDataService } from './MockDataService';
 import { ProfileStore } from './ProfileStore';
 import { RecipeStore } from './RecipeStore';
+import { IngredientStore } from './IngredientStore';
+import { AddIngredientResult, RecipeIngredientFilter } from './RecipeIngredientFilter';
+import { EXCEL_INGREDIENT_NAMES } from '../data/ExcelIngredientsData';
 import { UserProfile } from '../models/UserModel';
 
 /**
@@ -21,7 +24,7 @@ export interface DietLogEntry {
 
 /**
  * 全局应用状态中心（单例模式）
- * 支撑冰箱、购物清单、社区互动、收藏夹与自创菜谱的跨页面响应式联动
+ * 支撑冰箱、购物清单、社区互动、收藏夹、固定食材库与自创菜谱的跨页面响应式联动
  */
 export class AppDataState {
   private static instance: AppDataState | null = null;
@@ -32,6 +35,8 @@ export class AppDataState {
   shoppingList: ShoppingListItem[] = [];
   posts: PostItem[] = [];
   collectedRecipeIds: string[] = ['rec_001', 'rec_002'];
+  // 「固定食材库」中用户手动新增的食材（内置食材固定不可改，新增项持久化到应用沙箱）
+  customIngredients: string[] = [];
   dietLogs: DietLogEntry[] = [
     {
       id: 'log_01',
@@ -46,6 +51,7 @@ export class AppDataState {
   private context: common.Context | null = null;
   private profileVersion: number = 0;
   private recipeVersion: number = 0;
+  private ingredientVersion: number = 0;
 
   private constructor() {
     this.recipes = MockDataService.getInitialRecipes();
@@ -55,6 +61,7 @@ export class AppDataState {
     this.userProfile = MockDataService.getDefaultUserProfile();
     AppStorage.setOrCreate('profileVersion', 0);
     AppStorage.setOrCreate('recipeVersion', 0);
+    AppStorage.setOrCreate('ingredientVersion', 0);
   }
 
   static getInstance(): AppDataState {
@@ -196,6 +203,83 @@ export class AppDataState {
     this.posts.unshift(newPost);
   }
 
+  // ================= 固定食材库（用户新增食材） =================
+
+  /**
+   * 固定食材库全量名称：内置 31 项 + 用户新增项
+   * 内置食材由 Excel 菜谱去重得到，固定不可修改
+   */
+  getAllIngredientNames(): string[] {
+    return EXCEL_INGREDIENT_NAMES.concat(this.customIngredients);
+  }
+
+  /**
+   * 校验并新增食材：双向包含查重 → 通过则加入内存并落盘
+   * 例：已有「米」时新增「米饭」被拦截；已有「腊肠」时新增「香肠」放行
+   */
+  addCustomIngredient(name: string): AddIngredientResult {
+    const checkResult = RecipeIngredientFilter.checkAddIngredient(this.getAllIngredientNames(), name);
+    if (!checkResult.ok) {
+      return checkResult;
+    }
+    this.customIngredients.push(name.trim());
+    this.persistIngredients();
+    return checkResult;
+  }
+
+  /**
+   * 清空用户新增食材，恢复内置库
+   */
+  clearCustomIngredients(): void {
+    this.customIngredients = [];
+    const ctx = this.ensureContext();
+    if (ctx) {
+      IngredientStore.clear(ctx);
+    }
+    this.notifyIngredientsChanged();
+  }
+
+  /**
+   * 从应用沙箱还原用户新增食材（重启后调用）
+   */
+  restoreCustomIngredients(context: common.Context): void {
+    try {
+      const saved = IngredientStore.restore(context);
+      if (saved && saved.length > 0) {
+        this.customIngredients = saved;
+        this.notifyIngredientsChanged();
+      }
+    } catch (e) {
+      // 容错处理
+    }
+  }
+
+  private persistIngredients(): void {
+    const ctx = this.ensureContext();
+    if (ctx) {
+      IngredientStore.save(ctx, this.customIngredients);
+    }
+    this.notifyIngredientsChanged();
+  }
+
+  private notifyIngredientsChanged(): void {
+    this.ingredientVersion += 1;
+    AppStorage.setOrCreate('ingredientVersion', this.ingredientVersion);
+  }
+
+  private ensureContext(): common.Context | null {
+    let ctx = this.context;
+    if (!ctx) {
+      try {
+        ctx = getContext() as common.Context;
+        this.context = ctx;
+      } catch (e) {
+        // 忽略
+      }
+    }
+    return ctx;
+  }
+
   // ================= 自创与家常菜谱 =================
   addCustomRecipe(recipe: RecipeItem): void {
     recipe.isFamilyRecipe = true;
@@ -215,15 +299,7 @@ export class AppDataState {
     this.userProfile.recipeCount = this.recipes.length;
 
     // 持久化保存至手机本地文件
-    let ctx = this.context;
-    if (!ctx) {
-      try {
-        ctx = getContext() as common.Context;
-        this.context = ctx;
-      } catch (e) {
-        // 忽略
-      }
-    }
+    const ctx = this.ensureContext();
     if (ctx) {
       RecipeStore.save(ctx, this.customRecipes);
     }
@@ -276,6 +352,7 @@ export class AppDataState {
     this.context = context;
     ProfileStore.restore(context, this.userProfile);
     this.restoreCustomRecipes(context);
+    this.restoreCustomIngredients(context);
   }
 
   updateUserProfile(nickname: string, avatarText: string, avatarBg: string, bio: string, location: string, tastePreferences: string[]): void {
