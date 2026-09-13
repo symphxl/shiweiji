@@ -1,5 +1,8 @@
 import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
+import picker from '@ohos.file.picker';
+import { fileIo } from '@kit.CoreFileKit';
+import { common } from '@kit.AbilityKit';
 import { ColorConstants } from '../../common/constants/ColorConstants';
 import { StyleConstants } from '../../common/constants/StyleConstants';
 import { AppDataState } from '../../common/services/AppDataState';
@@ -21,7 +24,7 @@ const TASTE_OPTIONS: string[] = [
 
 /**
  * 拾味记 · 编辑个人资料 (Edit Profile)
- * 修改昵称 / 头像 / 简介 / 所在地 / 口味偏好，并本地持久化保存
+ * 修改昵称 / 本地图片头像 / 国风文字头像 / 简介 / 所在地 / 口味偏好，并本地持久化保存
  */
 @Entry
 @Component
@@ -31,6 +34,7 @@ struct EditProfilePage {
   @State nickname: string = '';
   @State avatarText: string = '';
   @State avatarBg: string = '#9E2B25';
+  @State avatarImage: string = '';
   @State bio: string = '';
   @State location: string = '';
   @State tastePreferences: string[] = [];
@@ -40,6 +44,7 @@ struct EditProfilePage {
     this.nickname = p.nickname;
     this.avatarText = p.avatarText;
     this.avatarBg = p.avatarBg;
+    this.avatarImage = p.avatarImage || '';
     this.bio = p.bio;
     this.location = p.location;
     this.tastePreferences = p.tastePreferences.slice();
@@ -54,6 +59,31 @@ struct EditProfilePage {
     }
   }
 
+  async pickLocalAvatarImage() {
+    try {
+      const photoSelectOptions = new picker.PhotoSelectOptions();
+      photoSelectOptions.MIMEType = picker.PhotoViewMIMETypes.IMAGE_TYPE;
+      photoSelectOptions.maxSelectNumber = 1;
+      const photoViewPicker = new picker.PhotoViewPicker();
+      const selectResult = await photoViewPicker.select(photoSelectOptions);
+      if (selectResult && selectResult.photoUris && selectResult.photoUris.length > 0) {
+        const srcUri = selectResult.photoUris[0];
+        const ctx = getContext(this) as common.Context;
+        const targetFilename = `avatar_${Date.now()}.jpg`;
+        const destPath = `${ctx.filesDir}/${targetFilename}`;
+        const srcFile = fileIo.openSync(srcUri, fileIo.OpenMode.READ_ONLY);
+        const destFile = fileIo.openSync(destPath, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC);
+        fileIo.copyFileSync(srcFile.fd, destFile.fd);
+        fileIo.closeSync(srcFile);
+        fileIo.closeSync(destFile);
+        this.avatarImage = 'file://' + destPath;
+        promptAction.showToast({ message: '已选取相册本地头像' });
+      }
+    } catch (err) {
+      promptAction.showToast({ message: '已取消选取' });
+    }
+  }
+
   save() {
     const name = this.nickname.trim();
     if (name.length === 0) {
@@ -61,18 +91,23 @@ struct EditProfilePage {
       return;
     }
     const avatar = this.avatarText.trim().length > 0 ? this.avatarText.trim().substring(0, 1) : name.substring(0, 1);
+    try {
+      this.state.setContext(getContext(this) as common.Context);
+    } catch (e) {}
+
     this.state.updateUserProfile(
       name,
       avatar,
       this.avatarBg,
       this.bio.trim(),
       this.location.trim(),
-      this.tastePreferences
+      this.tastePreferences,
+      this.avatarImage
     );
-    promptAction.showToast({ message: '资料已保存到本地' });
+    promptAction.showToast({ message: '🎉 个人资料已保存至本地！' });
     setTimeout(() => {
       router.back();
-    }, 500);
+    }, 400);
   }
 
   build() {
@@ -91,50 +126,86 @@ struct EditProfilePage {
 
       Scroll() {
         Column() {
-          // 头像预览 + 底色选择
+          // 头像预览 + 本地图片选择 / 底色与文字选择
           Column() {
             Stack() {
-              Circle({ width: 76, height: 76 })
-                .fill(this.avatarBg)
+              if (this.avatarImage && this.avatarImage.length > 0) {
+                Image(this.avatarImage)
+                  .width(80)
+                  .height(80)
+                  .borderRadius(40)
+                  .objectFit(ImageFit.Cover)
+              } else {
+                Circle({ width: 80, height: 80 })
+                  .fill(this.avatarBg)
 
-              Text(this.avatarText)
-                .fontSize(30)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(Color.White)
+                Text(this.avatarText)
+                  .fontSize(32)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(Color.White)
+              }
             }
-            .width(76)
-            .height(76)
-            .margin({ bottom: 10 })
+            .width(80)
+            .height(80)
+            .margin({ bottom: 12 })
 
-            Text('头像底色')
-              .fontSize(StyleConstants.FONT_CAPTION)
-              .fontColor(ColorConstants.COLOR_SUMI)
-              .margin({ bottom: 8 })
-
-            Flex({ wrap: FlexWrap.Wrap }) {
-              ForEach(AVATAR_COLORS, (color: string) => {
-                Stack() {
-                  Circle({ width: 34, height: 34 })
-                    .fill(color)
-                    .stroke(this.avatarBg === color ? ColorConstants.COLOR_INK : Color.Transparent)
-                    .strokeWidth(this.avatarBg === color ? 2 : 0)
-
-                  if (this.avatarBg === color) {
-                    Text('✓')
-                      .fontSize(15)
-                      .fontWeight(FontWeight.Bold)
-                      .fontColor(Color.White)
-                  }
-                }
-                .width(34)
+            Row() {
+              Button('📷 从相册选择本地图片作为头像')
                 .height(34)
-                .margin({ right: 10, bottom: 8 })
+                .fontSize(StyleConstants.FONT_CAPTION)
+                .backgroundColor(ColorConstants.COLOR_ZHU)
+                .fontColor(Color.White)
+                .borderRadius(StyleConstants.RADIUS_SM)
                 .onClick(() => {
-                  this.avatarBg = color;
+                  this.pickLocalAvatarImage();
                 })
-              }, (color: string) => color)
+
+              if (this.avatarImage && this.avatarImage.length > 0) {
+                Button('清除图片')
+                  .height(34)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                  .fontColor(ColorConstants.COLOR_BO)
+                  .borderRadius(StyleConstants.RADIUS_SM)
+                  .margin({ left: 8 })
+                  .onClick(() => {
+                    this.avatarImage = '';
+                  })
+              }
             }
-            .width('100%')
+            .margin({ bottom: 12 })
+
+            if (!this.avatarImage || this.avatarImage.length === 0) {
+              Text('头像底色（未设自定义图片时生效）')
+                .fontSize(StyleConstants.FONT_CAPTION)
+                .fontColor(ColorConstants.COLOR_SUMI)
+                .margin({ bottom: 8 })
+
+              Flex({ wrap: FlexWrap.Wrap }) {
+                ForEach(AVATAR_COLORS, (color: string) => {
+                  Stack() {
+                    Circle({ width: 34, height: 34 })
+                      .fill(color)
+                      .stroke(this.avatarBg === color ? ColorConstants.COLOR_INK : Color.Transparent)
+                      .strokeWidth(this.avatarBg === color ? 2 : 0)
+
+                    if (this.avatarBg === color) {
+                      Text('✓')
+                        .fontSize(15)
+                        .fontWeight(FontWeight.Bold)
+                        .fontColor(Color.White)
+                    }
+                  }
+                  .width(34)
+                  .height(34)
+                  .margin({ right: 10, bottom: 8 })
+                  .onClick(() => {
+                    this.avatarBg = color;
+                  })
+                }, (color: string) => color)
+              }
+              .width('100%')
+            }
           }
           .width('100%')
           .padding(StyleConstants.SPACE_MD)
@@ -170,7 +241,7 @@ struct EditProfilePage {
             .margin({ bottom: 12 })
 
             Column() {
-              Text('头像文字（一个字）')
+              Text('头像文字（未设自定义图片时展示）')
                 .fontSize(StyleConstants.FONT_CAPTION)
                 .fontColor(ColorConstants.COLOR_SUMI)
                 .margin({ bottom: 4 })
@@ -201,7 +272,7 @@ struct EditProfilePage {
 
           // 个人简介
           Column() {
-            Text('个人简介')
+            Text('个人简介 / 料理信条')
               .fontSize(StyleConstants.FONT_CAPTION)
               .fontColor(ColorConstants.COLOR_SUMI)
               .margin({ bottom: 4 })
@@ -230,12 +301,12 @@ struct EditProfilePage {
 
           // 所在地
           Column() {
-            Text('所在地')
+            Text('常住地区')
               .fontSize(StyleConstants.FONT_CAPTION)
               .fontColor(ColorConstants.COLOR_SUMI)
               .margin({ bottom: 4 })
 
-            TextInput({ placeholder: '例如：四川 · 成都', text: this.location })
+            TextInput({ placeholder: '例如：江南水乡、川蜀之畔', text: this.location })
               .width('100%')
               .height(40)
               .maxLength(20)
@@ -290,7 +361,7 @@ struct EditProfilePage {
           })
           .margin({ bottom: 20 })
 
-          Button('保存修改')
+          Button('确认保存资料（本地持久化）')
             .width('100%')
             .height(44)
             .backgroundColor(ColorConstants.COLOR_ZHU)

@@ -26,6 +26,7 @@ export class ProfileStore {
       profile.nickname = store.getSync('nickname', profile.nickname) as string;
       profile.avatarText = store.getSync('avatarText', profile.avatarText) as string;
       profile.avatarBg = store.getSync('avatarBg', profile.avatarBg) as string;
+      profile.avatarImage = store.getSync('avatarImage', profile.avatarImage || '') as string;
       profile.bio = store.getSync('bio', profile.bio) as string;
       profile.location = store.getSync('location', profile.location) as string;
       profile.tastePreferences = store.getSync('tastePreferences', profile.tastePreferences) as string[];
@@ -42,6 +43,7 @@ export class ProfileStore {
     store.putSync('nickname', profile.nickname);
     store.putSync('avatarText', profile.avatarText);
     store.putSync('avatarBg', profile.avatarBg);
+    store.putSync('avatarImage', profile.avatarImage || '');
     store.putSync('bio', profile.bio);
     store.putSync('location', profile.location);
     store.putSync('tastePreferences', profile.tastePreferences);

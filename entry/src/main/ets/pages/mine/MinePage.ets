@@ -1,4 +1,4 @@
-import router from '@ohos.router';
+﻿import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
 import { ColorConstants } from '../../common/constants/ColorConstants';
 import { StyleConstants } from '../../common/constants/StyleConstants';
@@ -19,6 +19,7 @@ export struct MinePage {
   @State private state: AppDataState = AppDataState.getInstance();
   @State profile: UserProfile = this.state.userProfile;
   @State familyRecipes: RecipeItem[] = [];
+  @State inventoryCount: number = 0;
 
   aboutToAppear() {
     this.refreshData();
@@ -27,94 +28,127 @@ export struct MinePage {
   refreshData() {
     this.profile = this.state.userProfile;
     this.familyRecipes = this.state.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_'));
+    this.inventoryCount = this.state.inventory.length;
+  }
+
+  goToEditProfile() {
+    router.pushUrl({
+      url: 'pages/mine/EditProfilePage'
+    });
   }
 
   build() {
     Scroll() {
       Column() {
-        // 顶部标题
-        Row() {
-          Column() {
-            Text('我的 · 烟火人间')
-              .fontSize(StyleConstants.FONT_H2)
-              .fontWeight(FontWeight.Bold)
-              .fontFamily('Songti SC')
-              .fontColor(ColorConstants.COLOR_INK)
-
-            Text('一日三餐 · 记录属于家的味道')
-              .fontSize(StyleConstants.FONT_CAPTION)
-              .fontColor(ColorConstants.COLOR_BO)
-              .margin({ top: 2 })
-          }
-          .alignItems(HorizontalAlign.Start)
-
-          Blank()
-
-          Text('单机离线纯享版')
-            .fontSize(StyleConstants.FONT_BADGE)
-            .fontColor(ColorConstants.COLOR_QING)
-            .backgroundColor('rgba(95, 113, 97, 0.12)')
-            .borderRadius(StyleConstants.RADIUS_PILL)
-            .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-        }
-        .width('100%')
-        .padding({ left: 16, right: 16, top: this.topSafeHeight + 12, bottom: 8 })
-
-        // 用户卡片头部
-        Column() {
+          // 顶部标题
           Row() {
-            Stack() {
-              Circle({ width: 56, height: 56 })
-                .fill(this.profile.avatarBg)
-
-              Text(this.profile.avatarText)
-                .fontSize(22)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(Color.White)
-            }
-            .width(56)
-            .height(56)
-            .margin({ right: StyleConstants.SPACE_MD })
-
             Column() {
-              Row() {
-                Text(this.profile.nickname)
-                  .fontSize(StyleConstants.FONT_H2)
-                  .fontWeight(FontWeight.Bold)
-                  .fontColor(ColorConstants.COLOR_INK)
+              Text('我的 · 烟火人间')
+                .fontSize(StyleConstants.FONT_H2)
+                .fontWeight(FontWeight.Bold)
+                .fontFamily('Songti SC')
+                .fontColor(ColorConstants.COLOR_INK)
 
-                Text(this.profile.familyRecipeBadge)
-                  .fontSize(StyleConstants.FONT_BADGE)
-                  .fontColor(ColorConstants.COLOR_CHA)
-                  .backgroundColor('rgba(200, 155, 60, 0.16)')
-                  .borderRadius(StyleConstants.RADIUS_SM)
-                  .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-                  .margin({ left: 8 })
-              }
-
-              Text(this.profile.bio)
+              Text('一日三餐 · 记录属于家的味道')
                 .fontSize(StyleConstants.FONT_CAPTION)
                 .fontColor(ColorConstants.COLOR_BO)
-                .margin({ top: 3, bottom: 4 })
-
-              Text(`家常菜谱 ${this.state.recipes.length} 道 · 烹饪打卡 ${this.state.dietLogs.length} 次 · 单机离线纯享`)
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(ColorConstants.COLOR_SUMI)
+                .margin({ top: 2 })
             }
-            .layoutWeight(1)
             .alignItems(HorizontalAlign.Start)
+
+            Blank()
+
+            Text('单机离线纯享版')
+              .fontSize(StyleConstants.FONT_BADGE)
+              .fontColor(ColorConstants.COLOR_QING)
+              .backgroundColor('rgba(95, 113, 97, 0.12)')
+              .borderRadius(StyleConstants.RADIUS_PILL)
+              .padding({ left: 8, right: 8, top: 3, bottom: 3 })
           }
           .width('100%')
-        }
-        .width('100%')
-        .padding(StyleConstants.SPACE_MD)
-        .backgroundColor(ColorConstants.COLOR_PAPER)
-        .borderRadius(StyleConstants.RADIUS_LG)
-        .border({
-          width: 1,
-          color: ColorConstants.COLOR_DIVIDER
-        })
-        .margin({ left: 16, right: 16, top: 8, bottom: 12 })
+          .padding({ left: 16, right: 16, top: this.topSafeHeight + 12, bottom: 8 })
+
+          // 用户卡片头部（支持点击编辑资料、头像支持本地图片与国风切换）
+          Column() {
+            Row() {
+              // 头像区：本地图片头像优先，未设置时展示国风汉字头像
+              Stack() {
+                if (this.profile.avatarImage && this.profile.avatarImage.length > 0) {
+                  Image(this.profile.avatarImage)
+                    .width(56)
+                    .height(56)
+                    .borderRadius(28)
+                    .objectFit(ImageFit.Cover)
+                } else {
+                  Circle({ width: 56, height: 56 })
+                    .fill(this.profile.avatarBg)
+
+                  Text(this.profile.avatarText)
+                    .fontSize(22)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(Color.White)
+                }
+              }
+              .width(56)
+              .height(56)
+              .margin({ right: StyleConstants.SPACE_MD })
+              .onClick(() => {
+                this.goToEditProfile();
+              })
+
+              Column() {
+                Row() {
+                  Text(this.profile.nickname)
+                    .fontSize(StyleConstants.FONT_H2)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(ColorConstants.COLOR_INK)
+
+                  // 2. 家传菜数量与我的家常菜数量严格挂钩同步
+                  Text(`家传菜 ×${this.familyRecipes.length}`)
+                    .fontSize(StyleConstants.FONT_BADGE)
+                    .fontColor(ColorConstants.COLOR_CHA)
+                    .backgroundColor('rgba(200, 155, 60, 0.16)')
+                    .borderRadius(StyleConstants.RADIUS_SM)
+                    .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                    .margin({ left: 8 })
+
+                  Blank()
+
+                  // 1. 编辑个人信息入口
+                  Text('编辑资料 ✎')
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_ZHU)
+                    .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                    .onClick(() => {
+                      this.goToEditProfile();
+                    })
+                }
+                .width('100%')
+
+                Text(this.profile.bio)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_BO)
+                  .margin({ top: 3, bottom: 4 })
+
+                // 7. 冰箱食材数量与我的冰箱食材数量同步挂钩
+                Text(`家常菜谱 ${this.familyRecipes.length} 道 · 冰箱食材 ${this.inventoryCount} 种 · 烹饪打卡 ${this.state.dietLogs.length} 次`)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_SUMI)
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+            }
+            .width('100%')
+          }
+          .width('100%')
+          .padding(StyleConstants.SPACE_MD)
+          .backgroundColor(ColorConstants.COLOR_PAPER)
+          .borderRadius(StyleConstants.RADIUS_LG)
+          .border({
+            width: 1,
+            color: ColorConstants.COLOR_DIVIDER
+          })
+          .margin({ left: 16, right: 16, top: 8, bottom: 12 })
 
         // 核心单机数据四宫格
         Row() {
@@ -170,7 +204,8 @@ export struct MinePage {
           })
 
           Column() {
-            Text(this.state.inventory.length.toString())
+            // 7. 冰箱食材数量与我的冰箱实际食材数量挂钩同步
+            Text(this.inventoryCount.toString())
               .fontSize(StyleConstants.FONT_H2)
               .fontWeight(FontWeight.Bold)
               .fontColor(ColorConstants.COLOR_ZHU)

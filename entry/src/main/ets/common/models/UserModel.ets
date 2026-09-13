@@ -3,6 +3,7 @@ export interface UserProfile {
   nickname: string;
   avatarText: string;
   avatarBg: string;
+  avatarImage?: string;
   bio: string;
   location: string;
   familyRecipeBadge: string;  // 如 "家传菜 ×3"

@@ -1,4 +1,5 @@
 import router from '@ohos.router';
+import promptAction from '@ohos.promptAction';
 import { ColorConstants } from '../../common/constants/ColorConstants';
 import { CommonConstants } from '../../common/constants/CommonConstants';
 import { StyleConstants } from '../../common/constants/StyleConstants';
@@ -29,8 +30,8 @@ export struct RecipeListPage {
   @StorageProp('ingredientVersion') ingredientVersion: number = 0;
   @StorageProp('inventoryVersion') inventoryVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
-  @State selectedIngredients: string[] = ['土豆', '茄子', '青椒'];
-  @State selectedCookware: string[] = ['炒锅'];
+  @State selectedIngredients: string[] = [];
+  @State selectedCookware: string[] = [];
   @State activeMode: string = CommonConstants.MODE_STRICT;
   @State activeCategoryTab: string = '全部';
   @State matchedResults: MatchedRecipeResult[] = [];
@@ -230,14 +231,32 @@ export struct RecipeListPage {
   }
 
   /**
-   * 恢复内置库：清空用户新增食材
+   * 恢复内置库：增加二次确认弹窗并明确告知恢复结果
    */
   resetIngredients() {
-    this.state.clearCustomIngredients();
-    this.addIngredientMsg = '已恢复内置固定食材库';
-    this.addIngredientMsgIsError = false;
-    this.buildIngredientMeta();
-    this.calculateMatches();
+    AlertDialog.show({
+      title: '恢复内置食材库',
+      message: `确定要恢复到初始固定食材库吗？\n恢复后将清除所有手动新增的食材，并保留默认的 ${COOK_INGREDIENTS.length} 种经典食材。`,
+      primaryButton: {
+        value: '取消',
+        action: () => {}
+      },
+      secondaryButton: {
+        value: '确认恢复',
+        fontColor: ColorConstants.COLOR_ZHU,
+        action: () => {
+          this.state.clearCustomIngredients();
+          this.addIngredientMsg = `已恢复初始固定食材库（共 ${COOK_INGREDIENTS.length} 种经典食材）`;
+          this.addIngredientMsgIsError = false;
+          this.buildIngredientMeta();
+          this.calculateMatches();
+          promptAction.showToast({
+            message: `已成功恢复内置食材库，共 ${COOK_INGREDIENTS.length} 种食材`,
+            duration: 2500
+          });
+        }
+      }
+    });
   }
 
   // 某食材关联的菜谱数（全量映射角标）
@@ -746,7 +765,18 @@ export struct RecipeListPage {
               }
             }
           } else {
-            if (this.matchedResults.length === 0) {
+            if (this.selectedIngredients.length === 0) {
+              EmptyStateView({
+                icon: '🧊',
+                title: '请先勾选冰箱食材',
+                desc: '从上方勾选冰箱现有食材与厨具，系统将按三档模式自动匹配可做菜肴',
+                buttonText: '勾选冰箱全部食材',
+                onButtonClick: () => {
+                  this.selectedIngredients = this.state.inventory.map(item => item.name);
+                  this.calculateMatches();
+                }
+              })
+            } else if (this.matchedResults.length === 0) {
               EmptyStateView({
                 icon: '🍃',
                 title: '当前模式下暂无匹配菜谱',

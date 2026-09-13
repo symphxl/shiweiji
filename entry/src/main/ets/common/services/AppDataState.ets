@@ -317,6 +317,7 @@ export class AppDataState {
   // ================= 自创与家常菜谱 =================
   addCustomRecipe(recipe: RecipeItem): void {
     recipe.isFamilyRecipe = true;
+    recipe.isFamilyRecipe = true;
     const existIdx = this.customRecipes.findIndex(r => r.id === recipe.id);
     if (existIdx >= 0) {
       this.customRecipes[existIdx] = recipe;
@@ -330,6 +331,8 @@ export class AppDataState {
     } else {
       this.recipes.unshift(recipe);
     }
+    const familyCount = this.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_')).length;
+    this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
     this.userProfile.recipeCount = this.recipes.length;
 
     // 持久化保存至手机本地文件
@@ -358,9 +361,13 @@ export class AppDataState {
         this.customRecipes.forEach(r => r.isFamilyRecipe = true);
         const savedIds = new Set(saved.map(r => r.id));
         this.recipes = this.customRecipes.concat(this.recipes.filter(r => !savedIds.has(r.id)));
+        const familyCount = this.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_')).length;
+        this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
         this.userProfile.recipeCount = this.recipes.length;
         this.recipeVersion += 1;
         AppStorage.setOrCreate('recipeVersion', this.recipeVersion);
+        this.profileVersion += 1;
+        AppStorage.setOrCreate('profileVersion', this.profileVersion);
       }
     } catch (e) {
       // 容错处理
@@ -408,30 +415,46 @@ export class AppDataState {
     this.restoreCustomRecipes(context);
     this.restoreCustomIngredients(context);
     this.restoreInventory(context);
+    const familyCount = this.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_')).length;
+    this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
+    this.userProfile.fridgeItemCount = this.inventory.length;
+    this.profileVersion += 1;
+    AppStorage.setOrCreate('profileVersion', this.profileVersion);
   }
 
-  updateUserProfile(nickname: string, avatarText: string, avatarBg: string, bio: string, location: string, tastePreferences: string[]): void {
+  updateUserProfile(
+    nickname: string,
+    avatarText: string,
+    avatarBg: string,
+    bio: string,
+    location: string,
+    tastePreferences: string[],
+    avatarImage?: string
+  ): void {
+    const familyCount = this.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_')).length;
     this.userProfile = {
       id: this.userProfile.id,
       nickname: nickname,
       avatarText: avatarText,
       avatarBg: avatarBg,
+      avatarImage: avatarImage !== undefined ? avatarImage : (this.userProfile.avatarImage || ''),
       bio: bio,
       location: location,
-      familyRecipeBadge: this.userProfile.familyRecipeBadge,
+      familyRecipeBadge: `家传菜 ×${familyCount}`,
       followingCount: this.userProfile.followingCount,
       followerCount: this.userProfile.followerCount,
       likedCount: this.userProfile.likedCount,
-      recipeCount: this.userProfile.recipeCount,
+      recipeCount: this.recipes.length,
       collectCount: this.userProfile.collectCount,
-      dietRecordCount: this.userProfile.dietRecordCount,
-      fridgeItemCount: this.userProfile.fridgeItemCount,
+      dietRecordCount: this.dietLogs.length,
+      fridgeItemCount: this.inventory.length,
       tastePreferences: tastePreferences
     };
     this.profileVersion += 1;
     AppStorage.setOrCreate('profileVersion', this.profileVersion);
-    if (this.context) {
-      ProfileStore.save(this.context, this.userProfile);
+    const ctx = this.ensureContext();
+    if (ctx) {
+      ProfileStore.save(ctx, this.userProfile);
     }
   }
 }

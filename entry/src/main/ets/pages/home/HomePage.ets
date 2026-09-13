@@ -18,6 +18,7 @@ export struct HomePage {
   onSwitchToRecipeTab?: () => void;
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   @StorageLink('inventoryVersion') @Watch('onInventoryChanged') inventoryVersion: number = 0;
+  @StorageLink('recipeVersion') @Watch('onRecipeVersionChanged') recipeVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
   @State todayRecipes: RecipeItem[] = [];
   @State recommendIndex: number = 0;
@@ -39,6 +40,10 @@ export struct HomePage {
   }
 
   onInventoryChanged() {
+    this.refreshTodayRecipes();
+  }
+
+  onRecipeVersionChanged() {
     this.refreshTodayRecipes();
   }
 
@@ -137,6 +142,7 @@ export struct HomePage {
   }
 
   refreshTodayRecipes() {
+    // 从本地全量持久化菜谱（含内置菜谱与用户自创/家传菜谱）中随机抽取
     const all = this.state.recipes;
     if (all.length === 0) {
       this.todayRecipes = [];
@@ -157,26 +163,37 @@ export struct HomePage {
 
     const result: RecipeItem[] = [];
 
-    // 1. 荤菜（招牌主菜）
-    if (meats.length > 0) {
-      result.push(meats[this.recommendIndex % meats.length]);
+    // 从候选列表中随机选取一项且不与已有菜品重复
+    const pickRandom = (pool: RecipeItem[]): RecipeItem | null => {
+      const candidates = pool.filter((p: RecipeItem) => !result.some((r: RecipeItem) => r.id === p.id));
+      if (candidates.length === 0) {
+        return null;
+      }
+      const randIdx = Math.floor(Math.random() * candidates.length);
+      return candidates[randIdx];
+    };
+
+    // 1. 荤菜（招牌主菜）：从本地所有荤菜（含用户自创家常荤菜）中随机抽取
+    const pickedMeat = pickRandom(meats);
+    if (pickedMeat) {
+      result.push(pickedMeat);
     }
 
-    // 2. 素菜（清爽时蔬）
-    const availableVegs = vegs.filter((v: RecipeItem) => !result.some((r: RecipeItem) => r.id === v.id));
-    if (availableVegs.length > 0) {
-      result.push(availableVegs[this.recommendIndex % availableVegs.length]);
+    // 2. 素菜（清爽时蔬）：从本地所有素菜（含用户自创素菜）中随机抽取
+    const pickedVeg = pickRandom(vegs);
+    if (pickedVeg) {
+      result.push(pickedVeg);
     }
 
-    // 3. 家常小炒 / 第三道菜（从未选菜品中挑选）
-    const remainingDishes = dishes.filter((d: RecipeItem) => !result.some((r: RecipeItem) => r.id === d.id));
-    if (remainingDishes.length > 0) {
-      result.push(remainingDishes[(this.recommendIndex * 2 + 1) % remainingDishes.length]);
+    // 3. 家常小炒 / 特色菜：从本地剩余菜肴中随机抽取
+    const pickedDish = pickRandom(dishes);
+    if (pickedDish) {
+      result.push(pickedDish);
     }
 
-    // 兜底补齐3道菜
-    while (result.length < 3 && dishes.length > result.length) {
-      const fallback = dishes.find((d: RecipeItem) => !result.some((r: RecipeItem) => r.id === d.id));
+    // 兜底补齐 3 道菜（若荤素不足则从全量菜肴中随机补齐）
+    while (result.length < 3) {
+      const fallback = pickRandom(dishes.length >= 3 ? dishes : all);
       if (fallback) {
         result.push(fallback);
       } else {
@@ -184,13 +201,14 @@ export struct HomePage {
       }
     }
 
-    // 4. 一汤（养生靓汤）
-    if (soups.length > 0) {
-      result.push(soups[this.recommendIndex % soups.length]);
+    // 4. 一汤（养生靓汤）：从本地所有汤羹中随机抽取
+    const pickedSoup = pickRandom(soups);
+    if (pickedSoup) {
+      result.push(pickedSoup);
     } else {
-      const fallbackAll = all.filter((a: RecipeItem) => !result.some((r: RecipeItem) => r.id === a.id));
-      if (fallbackAll.length > 0) {
-        result.push(fallbackAll[0]);
+      const fallbackSoup = pickRandom(all);
+      if (fallbackSoup) {
+        result.push(fallbackSoup);
       }
     }
 
