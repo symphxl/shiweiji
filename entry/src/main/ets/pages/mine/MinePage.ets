@@ -15,6 +15,7 @@ export struct MinePage {
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   @StorageLink('recipeVersion') @Watch('refreshData') recipeVersion: number = 0;
   @StorageLink('profileVersion') @Watch('refreshData') profileVersion: number = 0;
+  @StorageLink('inventoryVersion') @Watch('refreshData') inventoryVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
   @State profile: UserProfile = this.state.userProfile;
   @State familyRecipes: RecipeItem[] = [];

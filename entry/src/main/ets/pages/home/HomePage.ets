@@ -17,12 +17,65 @@ import promptAction from '@ohos.promptAction';
 export struct HomePage {
   onSwitchToRecipeTab?: () => void;
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageLink('inventoryVersion') @Watch('onInventoryChanged') inventoryVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
   @State todayRecipes: RecipeItem[] = [];
   @State recommendIndex: number = 0;
 
+  // 快捷添加食材弹窗状态
+  @State showQuickAddDialog: boolean = false;
+  @State quickAddName: string = '';
+  @State quickAddCategory: string = '蔬菜';
+  @State quickAddQuantity: number = 1;
+  @State quickAddUnit: string = '个';
+  @State quickAddDays: number = 5;
+  @State quickAddStorage: string = '冷藏';
+
+  readonly quickPresetIngredients: string[] = ['土豆', '牛肉', '五花肉', '青椒', '鸡蛋', '番茄', '豆腐', '黄瓜'];
+  readonly storageOptions: string[] = ['冷藏', '冷冻', '常温'];
+
   aboutToAppear() {
     this.refreshTodayRecipes();
+  }
+
+  onInventoryChanged() {
+    this.refreshTodayRecipes();
+  }
+
+  getExpiringItem(): InventoryItem | null {
+    const items = this.state.inventory.filter(i => i.daysRemaining <= 2 && i.quantity > 0);
+    return items.length > 0 ? items[0] : null;
+  }
+
+  saveQuickItem() {
+    const name = this.quickAddName.trim();
+    if (name.length === 0) {
+      promptAction.showToast({ message: '请输入食材名称' });
+      return;
+    }
+    let category = this.quickAddCategory;
+    if (['牛肉', '羊肉', '鸡肉', '五花肉', '排骨', '鸡翅', '腊肠', '里脊'].some(m => name.includes(m))) {
+      category = '肉禽';
+    } else if (name.includes('蛋') || name.includes('奶')) {
+      category = '蛋奶';
+    } else if (name.includes('鱼') || name.includes('虾') || name.includes('蟹')) {
+      category = '水产';
+    } else if (name.includes('豆腐')) {
+      category = '豆制品';
+    }
+
+    this.state.addInventoryItem(
+      name,
+      category,
+      this.quickAddQuantity,
+      this.quickAddUnit,
+      this.quickAddDays,
+      this.quickAddStorage
+    );
+    this.showQuickAddDialog = false;
+    this.quickAddName = '';
+    this.quickAddQuantity = 1;
+    promptAction.showToast({ message: `🎉 ${name}已成功存入冰箱并持久化到本地！` });
   }
 
   private isSoupRecipe(recipe: RecipeItem): boolean {
@@ -145,7 +198,8 @@ export struct HomePage {
   }
 
   build() {
-    Scroll() {
+    Stack({ alignContent: Alignment.Bottom }) {
+      Scroll() {
       Column() {
         // 顶部搜索快捷栏
         Row() {
@@ -231,7 +285,7 @@ export struct HomePage {
           // 冰箱食材胶囊条
           Column() {
             Flex({ wrap: FlexWrap.Wrap }) {
-              ForEach(this.state.inventory.slice(0, 5), (item: InventoryItem) => {
+              ForEach(this.state.inventory.slice(0, 6), (item: InventoryItem) => {
                 Text(`${item.name}×${item.quantity}`)
                   .fontSize(StyleConstants.FONT_CAPTION)
                   .fontColor(ColorConstants.COLOR_ZHU)
@@ -244,7 +298,7 @@ export struct HomePage {
                   .borderRadius(StyleConstants.RADIUS_PILL)
                   .padding({ left: 10, right: 10, top: 4, bottom: 4 })
                   .margin({ right: 6, bottom: 6 })
-              }, (item: InventoryItem) => item.name)
+              }, (item: InventoryItem) => `${item.id}_${item.quantity}_${this.inventoryVersion}`)
 
               Text('＋ 添加')
                 .fontSize(StyleConstants.FONT_CAPTION)
@@ -254,22 +308,31 @@ export struct HomePage {
                 .padding({ left: 10, right: 10, top: 4, bottom: 4 })
                 .margin({ right: 6, bottom: 6 })
                 .onClick(() => {
-                  router.pushUrl({ url: 'pages/mine/FridgePage' });
+                  this.showQuickAddDialog = true;
                 })
             }
             .width('100%')
 
-            // 临期提醒
-            Text('⚠ 番茄 2 天后临期，今天用掉它 ›')
-              .fontSize(StyleConstants.FONT_CAPTION)
-              .fontColor(ColorConstants.COLOR_WARNING)
-              .margin({ top: 4 })
-              .onClick(() => {
-                router.pushUrl({
-                  url: 'pages/recipe/RecipeDetailPage',
-                  params: { recipeId: 'rec_001' }
-                });
-              })
+            // 临期提醒（根据本地持久化库存动态计算）
+            Row() {
+              if (this.getExpiringItem() !== null) {
+                Text(`⚠ ${this.getExpiringItem()!.name} ${this.getExpiringItem()!.daysRemaining <= 0 ? '已过期' : this.getExpiringItem()!.daysRemaining + ' 天后临期'}，今天用掉它 ›`)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_WARNING)
+                  .onClick(() => {
+                    router.pushUrl({ url: 'pages/mine/FridgePage' });
+                  })
+              } else {
+                Text('✓ 冰箱食材储备新鲜，随心搭配出美味 ›')
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_QING)
+                  .onClick(() => {
+                    router.pushUrl({ url: 'pages/mine/FridgePage' });
+                  })
+              }
+            }
+            .width('100%')
+            .margin({ top: 4 })
           }
           .width('100%')
           .padding(StyleConstants.SPACE_MD)
@@ -439,5 +502,188 @@ export struct HomePage {
     .width('100%')
     .height('100%')
     .backgroundColor(ColorConstants.COLOR_XUAN)
+
+    // 首页快捷添加食材弹窗 (Quick Add Dialog)
+    if (this.showQuickAddDialog) {
+      Column() {
+        Blank()
+          .onClick(() => {
+            this.showQuickAddDialog = false;
+          })
+
+        Column() {
+          // 弹窗头部
+          Row() {
+            Text('🧊 快捷添加食材到冰箱')
+              .fontSize(StyleConstants.FONT_BODY)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(ColorConstants.COLOR_INK)
+
+            Blank()
+
+            Text('✕')
+              .fontSize(18)
+              .fontColor(ColorConstants.COLOR_BO)
+              .padding(4)
+              .onClick(() => {
+                this.showQuickAddDialog = false;
+              })
+          }
+          .width('100%')
+          .margin({ bottom: 12 })
+
+          // 常用食材快捷点选
+          Row() {
+            Text('推荐点选：')
+              .fontSize(StyleConstants.FONT_BADGE)
+              .fontColor(ColorConstants.COLOR_SUMI)
+
+            Flex({ wrap: FlexWrap.Wrap }) {
+              ForEach(this.quickPresetIngredients, (preset: string) => {
+                Text(preset)
+                  .fontSize(StyleConstants.FONT_BADGE)
+                  .fontColor(this.quickAddName === preset ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_INK)
+                  .backgroundColor(this.quickAddName === preset ? 'rgba(158, 43, 37, 0.12)' : ColorConstants.COLOR_SHENGCHENG)
+                  .borderRadius(StyleConstants.RADIUS_PILL)
+                  .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+                  .margin({ right: 4, bottom: 4 })
+                  .onClick(() => {
+                    this.quickAddName = preset;
+                  })
+              }, (preset: string) => preset)
+            }
+            .layoutWeight(1)
+          }
+          .width('100%')
+          .margin({ bottom: 10 })
+
+          // 输入框
+          TextInput({ placeholder: '输入食材名称，如：土豆、牛肉', text: this.quickAddName })
+            .width('100%')
+            .height(40)
+            .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+            .borderRadius(StyleConstants.RADIUS_SM)
+            .margin({ bottom: 10 })
+            .onChange((v: string) => {
+              this.quickAddName = v;
+            })
+
+          // 分类与存放环境
+          Row() {
+            Text('存放环境：')
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontColor(ColorConstants.COLOR_SUMI)
+
+            ForEach(this.storageOptions, (st: string) => {
+              Text(st)
+                .fontSize(StyleConstants.FONT_CAPTION)
+                .fontColor(this.quickAddStorage === st ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
+                .backgroundColor(this.quickAddStorage === st ? 'rgba(158, 43, 37, 0.12)' : ColorConstants.COLOR_SHENGCHENG)
+                .borderRadius(StyleConstants.RADIUS_SM)
+                .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+                .margin({ right: 6 })
+                .onClick(() => {
+                  this.quickAddStorage = st;
+                })
+            }, (st: string) => st)
+          }
+          .width('100%')
+          .margin({ bottom: 10 })
+
+          // 数量与单位
+          Row() {
+            Text('数量：')
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontColor(ColorConstants.COLOR_SUMI)
+
+            Text('－')
+              .fontSize(16)
+              .fontColor(ColorConstants.COLOR_INK)
+              .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+              .borderRadius(StyleConstants.RADIUS_SM)
+              .padding({ left: 10, right: 10, top: 2, bottom: 2 })
+              .onClick(() => {
+                if (this.quickAddQuantity > 1) {
+                  this.quickAddQuantity--;
+                }
+              })
+
+            Text(`${this.quickAddQuantity}`)
+              .fontSize(StyleConstants.FONT_BODY)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(ColorConstants.COLOR_INK)
+              .margin({ left: 10, right: 10 })
+
+            Text('＋')
+              .fontSize(16)
+              .fontColor(ColorConstants.COLOR_INK)
+              .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+              .borderRadius(StyleConstants.RADIUS_SM)
+              .padding({ left: 10, right: 10, top: 2, bottom: 2 })
+              .onClick(() => {
+                this.quickAddQuantity++;
+              })
+
+            Blank()
+
+            Text('保质期：')
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontColor(ColorConstants.COLOR_SUMI)
+
+            ForEach([3, 5, 7, 15], (d: number) => {
+              Text(`${d}天`)
+                .fontSize(StyleConstants.FONT_CAPTION)
+                .fontColor(this.quickAddDays === d ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
+                .backgroundColor(this.quickAddDays === d ? 'rgba(158, 43, 37, 0.12)' : ColorConstants.COLOR_SHENGCHENG)
+                .borderRadius(StyleConstants.RADIUS_SM)
+                .padding({ left: 6, right: 6, top: 4, bottom: 4 })
+                .margin({ left: 4 })
+                .onClick(() => {
+                  this.quickAddDays = d;
+                })
+            }, (d: number) => d.toString())
+          }
+          .width('100%')
+          .margin({ bottom: 14 })
+
+          // 存入按钮
+          Button('确认存入冰箱（自动持久化到本地）')
+            .width('100%')
+            .height(42)
+            .backgroundColor(ColorConstants.COLOR_ZHU)
+            .fontColor(Color.White)
+            .fontSize(StyleConstants.FONT_BODY)
+            .fontWeight(FontWeight.Bold)
+            .borderRadius(StyleConstants.RADIUS_MD)
+            .onClick(() => {
+              this.saveQuickItem();
+            })
+
+          // 完整管理链接
+          Text('前往完整冰箱管理（批次修改/分类筛选）›')
+            .fontSize(StyleConstants.FONT_CAPTION)
+            .fontColor(ColorConstants.COLOR_BO)
+            .margin({ top: 10 })
+            .onClick(() => {
+              this.showQuickAddDialog = false;
+              router.pushUrl({ url: 'pages/mine/FridgePage' });
+            })
+        }
+        .width('100%')
+        .backgroundColor(ColorConstants.COLOR_PAPER)
+        .borderRadius({ topLeft: StyleConstants.RADIUS_XL, topRight: StyleConstants.RADIUS_XL })
+        .padding(StyleConstants.SPACE_LG)
+        .shadow({
+          radius: 16,
+          color: 'rgba(0, 0, 0, 0.20)',
+          offsetX: 0,
+          offsetY: -4
+        })
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor('rgba(0, 0, 0, 0.45)')
+    }
   }
+}
 }

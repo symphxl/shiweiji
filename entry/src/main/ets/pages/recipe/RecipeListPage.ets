@@ -27,6 +27,7 @@ export struct RecipeListPage {
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   // 固定食材库变更通知（新增/清空食材后自增，驱动页面刷新）
   @StorageProp('ingredientVersion') ingredientVersion: number = 0;
+  @StorageProp('inventoryVersion') inventoryVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
   @State selectedIngredients: string[] = ['土豆', '茄子', '青椒'];
   @State selectedCookware: string[] = ['炒锅'];

@@ -19,6 +19,7 @@ struct Index {
 
   onPageShow() {
     AppStorage.setOrCreate('recipeVersion', Date.now());
+    AppStorage.setOrCreate('inventoryVersion', Date.now());
   }
 
   @Builder

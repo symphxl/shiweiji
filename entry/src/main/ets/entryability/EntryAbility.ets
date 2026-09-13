@@ -13,6 +13,7 @@ export default class EntryAbility extends UIAbility {
     appState.setContext(this.context);
     appState.restoreProfile(this.context);
     appState.restoreCustomRecipes(this.context);
+    appState.restoreInventory(this.context);
   }
 
   onDestroy(): void {

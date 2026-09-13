@@ -6,6 +6,7 @@ import { MockDataService } from './MockDataService';
 import { ProfileStore } from './ProfileStore';
 import { RecipeStore } from './RecipeStore';
 import { IngredientStore } from './IngredientStore';
+import { InventoryStore } from './InventoryStore';
 import { AddIngredientResult, RecipeIngredientFilter } from './RecipeIngredientFilter';
 import { EXCEL_INGREDIENT_NAMES } from '../data/ExcelIngredientsData';
 import { UserProfile } from '../models/UserModel';
@@ -52,6 +53,7 @@ export class AppDataState {
   private profileVersion: number = 0;
   private recipeVersion: number = 0;
   private ingredientVersion: number = 0;
+  private inventoryVersion: number = 0;
 
   private constructor() {
     this.recipes = MockDataService.getInitialRecipes();
@@ -62,6 +64,7 @@ export class AppDataState {
     AppStorage.setOrCreate('profileVersion', 0);
     AppStorage.setOrCreate('recipeVersion', 0);
     AppStorage.setOrCreate('ingredientVersion', 0);
+    AppStorage.setOrCreate('inventoryVersion', 0);
   }
 
   static getInstance(): AppDataState {
@@ -71,31 +74,61 @@ export class AppDataState {
     return AppDataState.instance;
   }
 
-  // ================= 冰箱管理 =================
+  // ================= 冰箱管理与本地持久化 =================
+  private persistInventory(): void {
+    const ctx = this.ensureContext();
+    if (ctx) {
+      InventoryStore.save(ctx, this.inventory);
+    }
+    this.inventoryVersion += 1;
+    AppStorage.setOrCreate('inventoryVersion', this.inventoryVersion);
+    this.profileVersion += 1;
+    AppStorage.setOrCreate('profileVersion', this.profileVersion);
+  }
+
   updateInventoryQuantity(id: string, delta: number): void {
     const item = this.inventory.find(it => it.id === id);
     if (item) {
       item.quantity = Math.max(0, item.quantity + delta);
+      this.persistInventory();
     }
   }
 
   addInventoryItem(name: string, category: string, quantity: number, unit: string, days: number, storage: string): void {
-    const newItem: InventoryItem = {
-      id: 'inv_' + Date.now(),
-      name: name,
-      category: category,
-      quantity: quantity,
-      unit: unit,
-      daysRemaining: days,
-      storageType: storage
-    };
-    this.inventory.unshift(newItem);
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return;
+    }
+    const exist = this.inventory.find(it => it.name === trimmedName && it.storageType === storage);
+    if (exist) {
+      exist.quantity += (quantity > 0 ? quantity : 1);
+      exist.daysRemaining = days > 0 ? days : exist.daysRemaining;
+      if (category) {
+        exist.category = category;
+      }
+      if (unit) {
+        exist.unit = unit;
+      }
+    } else {
+      const newItem: InventoryItem = {
+        id: 'inv_' + Date.now(),
+        name: trimmedName,
+        category: category || '蔬菜',
+        quantity: quantity > 0 ? quantity : 1,
+        unit: unit || '个',
+        daysRemaining: days > 0 ? days : 5,
+        storageType: storage || '冷藏'
+      };
+      this.inventory.unshift(newItem);
+    }
     this.userProfile.fridgeItemCount = this.inventory.length;
+    this.persistInventory();
   }
 
   removeInventoryItem(id: string): void {
     this.inventory = this.inventory.filter(it => it.id !== id);
     this.userProfile.fridgeItemCount = this.inventory.length;
+    this.persistInventory();
   }
 
   // ================= 购物清单 =================
@@ -139,6 +172,7 @@ export class AppDataState {
       }
     }
     this.shoppingList = this.shoppingList.filter(it => !it.isChecked);
+    this.persistInventory();
     return checked.length;
   }
 
@@ -348,11 +382,32 @@ export class AppDataState {
   }
 
   // ================= 个人资料与全局初始化 =================
+  restoreInventory(context: common.Context): void {
+    this.context = context;
+    try {
+      const saved = InventoryStore.restore(context);
+      if (saved !== null && Array.isArray(saved)) {
+        this.inventory = saved;
+      } else {
+        this.inventory = MockDataService.getInitialInventory();
+        InventoryStore.save(context, this.inventory);
+      }
+      this.userProfile.fridgeItemCount = this.inventory.length;
+      this.inventoryVersion += 1;
+      AppStorage.setOrCreate('inventoryVersion', this.inventoryVersion);
+      this.profileVersion += 1;
+      AppStorage.setOrCreate('profileVersion', this.profileVersion);
+    } catch (e) {
+      // 容错处理
+    }
+  }
+
   restoreProfile(context: common.Context): void {
     this.context = context;
     ProfileStore.restore(context, this.userProfile);
     this.restoreCustomRecipes(context);
     this.restoreCustomIngredients(context);
+    this.restoreInventory(context);
   }
 
   updateUserProfile(nickname: string, avatarText: string, avatarBg: string, bio: string, location: string, tastePreferences: string[]): void {

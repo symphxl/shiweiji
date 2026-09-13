@@ -23,6 +23,7 @@ class StatusDisplayInfo {
 @Entry
 @Component
 struct FridgePage {
+  @StorageLink('inventoryVersion') inventoryVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
   @State activeStorageFilter: string = '全部';
   @State showAddDialog: boolean = false;
