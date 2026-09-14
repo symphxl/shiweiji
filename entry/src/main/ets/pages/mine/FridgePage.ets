@@ -400,7 +400,7 @@ struct FridgePage {
             .width('100%')
             .margin({ bottom: 12 })
 
-            // 数量录入（只允许正数包含小数）与单位录入
+            // 数量录入（只允许正数包含小数）与单位下拉选
             Row() {
               Text('食材数量：')
                 .fontSize(StyleConstants.FONT_CAPTION)
@@ -424,46 +424,20 @@ struct FridgePage {
                   this.newQuantityStr = clean;
                 })
 
-              TextInput({
-                placeholder: '单位',
-                text: this.newUnit
-              })
-                .width(80)
+              Select(this.commonUnits.map((u: string) => ({ value: u } as SelectOption)))
+                .value(this.newUnit)
+                .font({ size: 14 })
+                .fontColor(ColorConstants.COLOR_INK)
+                .selectedOptionFont({ size: 14 })
+                .optionFont({ size: 14 })
                 .height(38)
                 .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
                 .borderRadius(StyleConstants.RADIUS_SM)
-                .onChange((v: string) => {
-                  this.newUnit = v;
+                .onSelect((index: number, text?: string) => {
+                  if (text) {
+                    this.newUnit = text;
+                  }
                 })
-            }
-            .width('100%')
-            .margin({ bottom: 8 })
-
-            // 常用单位点选
-            Row() {
-              Text('常用单位：')
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(ColorConstants.COLOR_SUMI)
-
-              Scroll() {
-                Row() {
-                  ForEach(this.commonUnits, (u: string) => {
-                    Text(u)
-                      .fontSize(12)
-                      .fontColor(this.newUnit === u ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
-                      .backgroundColor(this.newUnit === u ? 'rgba(158, 43, 37, 0.12)' : ColorConstants.COLOR_SHENGCHENG)
-                      .borderRadius(StyleConstants.RADIUS_SM)
-                      .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-                      .margin({ right: 6 })
-                      .onClick(() => {
-                        this.newUnit = u;
-                      })
-                  }, (u: string) => u)
-                }
-              }
-              .scrollable(ScrollDirection.Horizontal)
-              .scrollBar(BarState.Off)
-              .layoutWeight(1)
             }
             .width('100%')
             .margin({ bottom: 12 })

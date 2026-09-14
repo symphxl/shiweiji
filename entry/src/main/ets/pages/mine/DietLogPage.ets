@@ -113,11 +113,14 @@ struct DietLogPage {
           }
         }
         .width('100%')
+        .justifyContent(FlexAlign.Start)
         .padding(StyleConstants.SPACE_MD)
       }
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
+      .width('100%')
       .layoutWeight(1)
+      .align(Alignment.Top)
     }
     .width('100%')
     .height('100%')

@@ -368,6 +368,13 @@ struct RecipeDetailPage {
                         .margin({ left: 6 })
                     }
 
+                    if (ing.substitute && ing.substitute.length > 0) {
+                      Text(`(${ing.substitute})`)
+                        .fontSize(StyleConstants.FONT_CAPTION)
+                        .fontColor(ColorConstants.COLOR_BO)
+                        .margin({ left: 4 })
+                    }
+
                     Blank()
 
                     Text(this.calculateAmount(ing))

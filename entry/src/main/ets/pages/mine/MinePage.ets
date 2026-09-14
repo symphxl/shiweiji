@@ -250,6 +250,7 @@ export struct MinePage {
               Column() {
                 Text('🧊')
                   .fontSize(22)
+                  .margin({ top: 4 })
                 Text('我的冰箱')
                   .fontSize(StyleConstants.FONT_CAPTION)
                   .fontColor(ColorConstants.COLOR_INK)
@@ -266,6 +267,7 @@ export struct MinePage {
                 Stack({ alignContent: Alignment.TopEnd }) {
                   Text('🍲')
                     .fontSize(22)
+                    .margin({ top: 4, right: 6 })
 
                   if (this.wishlistCount > 0) {
                     Text(this.wishlistCount.toString())
@@ -275,7 +277,6 @@ export struct MinePage {
                       .backgroundColor(ColorConstants.COLOR_ZHU)
                       .borderRadius(StyleConstants.RADIUS_PILL)
                       .padding({ left: 4, right: 4, top: 1, bottom: 1 })
-                      .margin({ left: 16, top: -4 })
                   }
                 }
 
@@ -294,6 +295,7 @@ export struct MinePage {
               Column() {
                 Text('✍️')
                   .fontSize(22)
+                  .margin({ top: 4 })
                 Text('自创菜谱')
                   .fontSize(StyleConstants.FONT_CAPTION)
                   .fontColor(ColorConstants.COLOR_INK)
@@ -309,6 +311,7 @@ export struct MinePage {
               Column() {
                 Text('📔')
                   .fontSize(22)
+                  .margin({ top: 4 })
                 Text('饮食日记')
                   .fontSize(StyleConstants.FONT_CAPTION)
                   .fontColor(ColorConstants.COLOR_INK)
@@ -324,6 +327,7 @@ export struct MinePage {
               Column() {
                 Text('⚙️')
                   .fontSize(22)
+                  .margin({ top: 4 })
                 Text('口味偏好')
                   .fontSize(StyleConstants.FONT_CAPTION)
                   .fontColor(ColorConstants.COLOR_INK)
@@ -337,7 +341,7 @@ export struct MinePage {
           .columnsTemplate('1fr 1fr 1fr 1fr 1fr')
           .rowsGap(8)
           .columnsGap(4)
-          .height(72)
+          .height(76)
         }
         .width('100%')
         .padding(StyleConstants.SPACE_MD)
@@ -398,8 +402,8 @@ export struct MinePage {
               Row() {
                 Stack() {
                   Column()
-                    .width(56)
-                    .height(44)
+                    .width(rec.isFamilyRecipe ? 68 : 52)
+                    .height(rec.isFamilyRecipe ? 56 : 42)
                     .borderRadius(StyleConstants.RADIUS_SM)
                     .linearGradient({
                       angle: 150,
@@ -410,28 +414,19 @@ export struct MinePage {
                     })
 
                   Text(rec.emoji)
-                    .fontSize(18)
+                    .fontSize(rec.isFamilyRecipe ? 26 : 18)
                 }
-                .margin({ right: 10 })
+                .margin({ right: rec.isFamilyRecipe ? 12 : 10 })
 
                 Column() {
                   Row() {
                     Text(rec.name)
-                      .fontSize(StyleConstants.FONT_BODY_SM)
+                      .fontSize(rec.isFamilyRecipe ? 18 : StyleConstants.FONT_BODY_SM)
                       .fontWeight(FontWeight.Bold)
-                      .fontColor(ColorConstants.COLOR_INK)
+                      .fontColor(rec.isFamilyRecipe ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_INK)
 
-                    // 设为「家传菜」时，在列表中置顶并放大标签重点突出
-                    if (rec.isFamilyRecipe) {
-                      Text('🏮 置顶 · 家传菜')
-                        .fontSize(StyleConstants.FONT_BODY_SM)
-                        .fontWeight(FontWeight.Bold)
-                        .fontColor(ColorConstants.COLOR_ZHU)
-                        .backgroundColor('rgba(158, 43, 37, 0.14)')
-                        .borderRadius(StyleConstants.RADIUS_SM)
-                        .padding({ left: 8, right: 8, top: 2, bottom: 2 })
-                        .margin({ left: 8 })
-                    } else {
+                    // 设为「家传菜」做放大卡片展示，不打标置顶·家传菜；非家传菜显示「家常菜」
+                    if (!rec.isFamilyRecipe) {
                       Text('家常菜')
                         .fontSize(StyleConstants.FONT_BADGE)
                         .fontColor(ColorConstants.COLOR_BO)
@@ -452,50 +447,42 @@ export struct MinePage {
                     }
                   }
 
-                  Text(rec.story.length > 25 ? rec.story.substring(0, 25) + '...' : rec.story)
-                    .fontSize(StyleConstants.FONT_CAPTION)
+                  Text(rec.story.length > (rec.isFamilyRecipe ? 32 : 24) ? rec.story.substring(0, rec.isFamilyRecipe ? 32 : 24) + '...' : rec.story)
+                    .fontSize(rec.isFamilyRecipe ? 13 : StyleConstants.FONT_CAPTION)
                     .fontColor(ColorConstants.COLOR_BO)
-                    .margin({ top: 3 })
+                    .margin({ top: rec.isFamilyRecipe ? 4 : 3 })
                 }
                 .layoutWeight(1)
                 .alignItems(HorizontalAlign.Start)
 
-                Row() {
-                  Button('✏️ 编辑')
-                    .height(30)
-                    .fontSize(StyleConstants.FONT_CAPTION)
-                    .fontColor(ColorConstants.COLOR_ZHU)
-                    .backgroundColor('rgba(158, 43, 37, 0.08)')
-                    .borderRadius(StyleConstants.RADIUS_SM)
-                    .padding({ left: 8, right: 8 })
-                    .margin({ right: 6 })
-                    .onClick(() => {
-                      router.pushUrl({
-                        url: 'pages/mine/CreateRecipePage',
-                        params: { recipeId: rec.id }
-                      });
-                    })
-
-                  Text('查看 ›')
-                    .fontSize(StyleConstants.FONT_CAPTION)
-                    .fontColor(ColorConstants.COLOR_BO)
-                    .onClick(() => {
-                      router.pushUrl({
-                        url: 'pages/recipe/RecipeDetailPage',
-                        params: { recipeId: rec.id }
-                      });
-                    })
-                }
+                Button('✏️ 编辑')
+                  .height(rec.isFamilyRecipe ? 32 : 28)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_ZHU)
+                  .backgroundColor('rgba(158, 43, 37, 0.08)')
+                  .borderRadius(StyleConstants.RADIUS_SM)
+                  .padding({ left: 8, right: 8 })
+                  .onClick(() => {
+                    router.pushUrl({
+                      url: 'pages/mine/CreateRecipePage',
+                      params: { recipeId: rec.id }
+                    });
+                  })
               }
               .width('100%')
-              .padding(StyleConstants.SPACE_MD)
-              .backgroundColor(ColorConstants.COLOR_PAPER)
+              .padding(rec.isFamilyRecipe ? 16 : StyleConstants.SPACE_MD)
+              .backgroundColor(rec.isFamilyRecipe ? '#FFFDF9' : ColorConstants.COLOR_PAPER)
               .borderRadius(StyleConstants.RADIUS_MD)
               .border({
                 width: rec.isFamilyRecipe ? 1.5 : 1,
-                color: rec.isFamilyRecipe ? 'rgba(158, 43, 37, 0.28)' : ColorConstants.COLOR_DIVIDER
+                color: rec.isFamilyRecipe ? 'rgba(158, 43, 37, 0.45)' : ColorConstants.COLOR_DIVIDER
               })
-              .margin({ bottom: 8 })
+              .shadow(rec.isFamilyRecipe ? {
+                radius: 8,
+                color: 'rgba(158, 43, 37, 0.12)',
+                offsetY: 2
+              } : undefined)
+              .margin({ bottom: rec.isFamilyRecipe ? 12 : 8 })
               .onClick(() => {
                 router.pushUrl({
                   url: 'pages/recipe/RecipeDetailPage',

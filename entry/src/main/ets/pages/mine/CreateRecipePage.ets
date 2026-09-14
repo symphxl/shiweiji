@@ -8,12 +8,14 @@ import { RecipeItem, RecipeIngredient, CookingStepItem } from '../../common/mode
 import { ShiWeiNavBar } from '../../components/common/ShiWeiNavBar';
 
 /**
- * 动态食材/调料输入条目
+ * 动态食材/调料输入条目（3个输入框 + 1个单位下拉选）
  */
 interface DynamicIngredient {
   id: string;
   name: string;
   amount: string;
+  unit: string;
+  note: string;
 }
 
 /**
@@ -32,6 +34,8 @@ interface DynamicStep {
 struct CreateRecipePage {
   @State private state: AppDataState = AppDataState.getInstance();
 
+  readonly commonUnits: string[] = ['个', '克', '斤', '两', '千克', '袋', '盒', '块', '根', '瓶', '勺', '包', '把', '只', '片', 'mL', '适量'];
+
   // 1. 菜谱名称输入框置空
   @State recipeName: string = '';
   @State region: string = '家庭自创 · 温暖烟火';
@@ -44,9 +48,9 @@ struct CreateRecipePage {
   // 这道菜的故事置空
   @State story: string = '';
 
-  // 3. 食材用量输入框置空，初始默认只有一行输入框（包含食材调料输入框与数量输入框）
+  // 3. 食材用量输入框置空，初始默认只有一行（包含3个输入框+1个单位下拉选）
   @State ingredientsList: DynamicIngredient[] = [
-    { id: 'ing_init_1', name: '', amount: '' }
+    { id: 'ing_init_1', name: '', amount: '', unit: '个', note: '' }
   ];
 
   // 4. 关键步骤输入框置空，初始默认步骤一，每一个步骤描述/说明由用户输入
@@ -88,16 +92,13 @@ struct CreateRecipePage {
     // 回填食材列表
     if (target.ingredients && target.ingredients.length > 0) {
       this.ingredientsList = target.ingredients.map((ing, idx) => {
-        let amountStr = '';
-        if (ing.unit && ing.unit !== '适量') {
-          amountStr = (ing.baseAmount > 0 && ing.baseAmount !== 1) ? `${ing.baseAmount} ${ing.unit}` : ing.unit;
-        } else if (ing.baseAmount > 0) {
-          amountStr = `${ing.baseAmount}`;
-        }
+        const amountVal = (ing.baseAmount !== undefined && ing.baseAmount !== null && ing.baseAmount > 0) ? `${ing.baseAmount}` : '';
         return {
           id: `ing_edit_${idx}_${Date.now()}`,
-          name: ing.name,
-          amount: amountStr
+          name: ing.name || '',
+          amount: amountVal,
+          unit: ing.unit || '个',
+          note: ing.substitute || ''
         } as DynamicIngredient;
       });
     }
@@ -117,7 +118,9 @@ struct CreateRecipePage {
     this.ingredientsList.push({
       id: `ing_${Date.now()}_${this.ingredientsList.length}`,
       name: '',
-      amount: ''
+      amount: '',
+      unit: '个',
+      note: ''
     });
   }
 
@@ -151,14 +154,17 @@ struct CreateRecipePage {
     const validIngredients: RecipeIngredient[] = [];
     this.ingredientsList.forEach((item, idx) => {
       const n = item.name.trim();
-      const a = item.amount.trim();
+      const a = parseFloat(item.amount);
+      const u = (item.unit && item.unit.trim().length > 0) ? item.unit.trim() : '个';
+      const note = item.note ? item.note.trim() : '';
       if (n.length > 0) {
         validIngredients.push({
           id: `c_ing_${idx + 1}`,
           name: n,
-          baseAmount: 1,
-          unit: a.length > 0 ? a : '适量',
-          isRequired: idx === 0
+          baseAmount: (!isNaN(a) && a > 0) ? a : 1,
+          unit: u,
+          isRequired: idx === 0,
+          substitute: note.length > 0 ? note : undefined
         });
       }
     });
@@ -231,7 +237,7 @@ struct CreateRecipePage {
   build() {
     Column() {
       ShiWeiNavBar({
-        title: this.isEditMode ? '编辑家常菜谱' : '添加家常菜 · 记录味道',
+        title: this.isEditMode ? '编辑家传菜谱' : '添加家传菜 · 记录味道',
         rightText: '保存',
         onBackClick: () => {
           router.back();
@@ -390,7 +396,7 @@ struct CreateRecipePage {
           })
           .margin({ bottom: 12 })
 
-          // 4. 食材用量（置空，初始只有一行输入框，支持动态添加）
+          // 4. 食材用量（置空，初始只有一行输入框，包含3个输入框+1个单位下拉选，支持动态添加）
           Column() {
             Row() {
               Text('🥗 食材用量')
@@ -407,39 +413,110 @@ struct CreateRecipePage {
             .width('100%')
             .margin({ bottom: 8 })
 
+            // 表头说明
+            Row() {
+              Text('食材名称')
+                .fontSize(11)
+                .fontColor(ColorConstants.COLOR_BO)
+                .layoutWeight(1.2)
+                .margin({ left: 4 })
+
+              Text('数量')
+                .fontSize(11)
+                .fontColor(ColorConstants.COLOR_BO)
+                .width(48)
+                .margin({ right: 4 })
+
+              Text('单位')
+                .fontSize(11)
+                .fontColor(ColorConstants.COLOR_BO)
+                .width(62)
+                .margin({ right: 4 })
+
+              Text('备注/说明')
+                .fontSize(11)
+                .fontColor(ColorConstants.COLOR_BO)
+                .layoutWeight(1)
+
+              if (this.ingredientsList.length > 1) {
+                Text('')
+                  .width(22)
+              }
+            }
+            .width('100%')
+            .margin({ bottom: 4 })
+
             ForEach(this.ingredientsList, (item: DynamicIngredient, index: number) => {
               Row() {
+                // 1. 食材名称输入框
                 TextInput({
-                  placeholder: `食材/调料 ${index + 1}（如：老豆腐）`,
+                  placeholder: '食材名',
                   text: item.name
+                })
+                  .layoutWeight(1.2)
+                  .height(38)
+                  .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                  .borderRadius(StyleConstants.RADIUS_SM)
+                  .margin({ right: 4 })
+                  .onChange((v: string) => {
+                    item.name = v;
+                  })
+
+                // 2. 数量输入框
+                TextInput({
+                  placeholder: '数',
+                  text: item.amount
+                })
+                  .width(48)
+                  .height(38)
+                  .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                  .borderRadius(StyleConstants.RADIUS_SM)
+                  .margin({ right: 4 })
+                  .onChange((v: string) => {
+                    let clean = v.replace(/[^0-9.]/g, '');
+                    const parts = clean.split('.');
+                    if (parts.length > 2) {
+                      clean = parts[0] + '.' + parts.slice(1).join('');
+                    }
+                    item.amount = clean;
+                  })
+
+                // 3. 单位下拉选
+                Select(this.commonUnits.map((u: string) => ({ value: u } as SelectOption)))
+                  .value(item.unit || '个')
+                  .font({ size: 12 })
+                  .fontColor(ColorConstants.COLOR_INK)
+                  .selectedOptionFont({ size: 12 })
+                  .optionFont({ size: 12 })
+                  .height(38)
+                  .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                  .borderRadius(StyleConstants.RADIUS_SM)
+                  .margin({ right: 4 })
+                  .onSelect((idx: number, val?: string) => {
+                    if (val) {
+                      item.unit = val;
+                    }
+                  })
+
+                // 4. 备注/说明输入框
+                TextInput({
+                  placeholder: '说明(如切块)',
+                  text: item.note
                 })
                   .layoutWeight(1)
                   .height(38)
                   .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
                   .borderRadius(StyleConstants.RADIUS_SM)
-                  .margin({ right: 6 })
+                  .margin({ right: 4 })
                   .onChange((v: string) => {
-                    item.name = v;
-                  })
-
-                TextInput({
-                  placeholder: '数量/用量（如：1块）',
-                  text: item.amount
-                })
-                  .width(100)
-                  .height(38)
-                  .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                  .borderRadius(StyleConstants.RADIUS_SM)
-                  .margin({ right: 6 })
-                  .onChange((v: string) => {
-                    item.amount = v;
+                    item.note = v;
                   })
 
                 if (this.ingredientsList.length > 1) {
                   Text('✕')
                     .fontSize(16)
                     .fontColor(ColorConstants.COLOR_BO)
-                    .padding(6)
+                    .padding({ left: 2, right: 2, top: 4, bottom: 4 })
                     .onClick(() => {
                       this.removeIngredientRow(index);
                     })
