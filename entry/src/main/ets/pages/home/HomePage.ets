@@ -18,6 +18,7 @@ export struct HomePage {
   onSwitchToRecipeTab?: () => void;
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   @StorageProp('bottomSafeHeight') bottomSafeHeight: number = 20;
+  @StorageProp('isTablet') isTablet: boolean = false;
   @StorageProp('userNickname') @Watch('onProfileChanged') userNickname: string = '';
   @StorageLink('inventoryVersion') @Watch('onInventoryChanged') inventoryVersion: number = 0;
   @StorageLink('recipeVersion') @Watch('onRecipeVersionChanged') recipeVersion: number = 0;
@@ -496,19 +497,41 @@ export struct HomePage {
           .width('100%')
           .margin({ bottom: 8 })
 
-          ForEach(this.todayRecipes, (recipe: RecipeItem, index: number) => {
-            RecipeCard({
-              recipe: recipe,
-              matchBadge: this.getRecipeRoleBadge(recipe, index),
-              badgeColor: this.getRecipeRoleColor(recipe, index),
-              onCardClick: () => {
-                router.pushUrl({
-                  url: 'pages/recipe/RecipeDetailPage',
-                  params: { recipeId: recipe.id }
-                });
-              }
-            })
-          }, (recipe: RecipeItem) => recipe.id)
+          if (this.isTablet) {
+            Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween }) {
+              ForEach(this.todayRecipes, (recipe: RecipeItem, index: number) => {
+                Column() {
+                  RecipeCard({
+                    recipe: recipe,
+                    matchBadge: this.getRecipeRoleBadge(recipe, index),
+                    badgeColor: this.getRecipeRoleColor(recipe, index),
+                    onCardClick: () => {
+                      router.pushUrl({
+                        url: 'pages/recipe/RecipeDetailPage',
+                        params: { recipeId: recipe.id }
+                      });
+                    }
+                  })
+                }
+                .width('49%')
+              }, (recipe: RecipeItem) => recipe.id)
+            }
+            .width('100%')
+          } else {
+            ForEach(this.todayRecipes, (recipe: RecipeItem, index: number) => {
+              RecipeCard({
+                recipe: recipe,
+                matchBadge: this.getRecipeRoleBadge(recipe, index),
+                badgeColor: this.getRecipeRoleColor(recipe, index),
+                onCardClick: () => {
+                  router.pushUrl({
+                    url: 'pages/recipe/RecipeDetailPage',
+                    params: { recipeId: recipe.id }
+                  });
+                }
+              })
+            }, (recipe: RecipeItem) => recipe.id)
+          }
         }
         .width('100%')
         .padding({ left: 16, right: 16 })
@@ -816,13 +839,14 @@ export struct HomePage {
             })
         }
         .width('100%')
+        .constraintSize({ maxWidth: this.isTablet ? 560 : '100%' })
         .backgroundColor(ColorConstants.COLOR_PAPER)
-        .borderRadius({ topLeft: StyleConstants.RADIUS_XL, topRight: StyleConstants.RADIUS_XL })
+        .borderRadius(this.isTablet ? StyleConstants.RADIUS_XL : { topLeft: StyleConstants.RADIUS_XL, topRight: StyleConstants.RADIUS_XL })
         .padding({
           left: StyleConstants.SPACE_LG,
           right: StyleConstants.SPACE_LG,
           top: StyleConstants.SPACE_LG,
-          bottom: StyleConstants.SPACE_LG + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 20)
+          bottom: this.isTablet ? StyleConstants.SPACE_LG : (StyleConstants.SPACE_LG + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 20))
         })
         .shadow({
           radius: 16,
@@ -833,6 +857,8 @@ export struct HomePage {
       }
       .width('100%')
       .height('100%')
+      .alignItems(HorizontalAlign.Center)
+      .justifyContent(this.isTablet ? FlexAlign.Center : FlexAlign.End)
       .backgroundColor('rgba(0, 0, 0, 0.45)')
     }
   }

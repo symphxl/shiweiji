@@ -13,6 +13,7 @@ import { RecipeItem } from '../../common/models/RecipeModel';
 @Component
 export struct MinePage {
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageProp('isTablet') isTablet: boolean = false;
   @StorageProp('userNickname') @Watch('refreshData') userNickname: string = '';
   @StorageLink('recipeVersion') @Watch('refreshData') recipeVersion: number = 0;
   @StorageLink('profileVersion') @Watch('refreshData') profileVersion: number = 0;
@@ -398,104 +399,206 @@ export struct MinePage {
               color: ColorConstants.COLOR_DIVIDER
             })
           } else {
-            ForEach(this.familyRecipes, (rec: RecipeItem) => {
-              Row() {
-                Stack() {
-                  Column()
-                    .width(rec.isFamilyRecipe ? 68 : 52)
-                    .height(rec.isFamilyRecipe ? 56 : 42)
-                    .borderRadius(StyleConstants.RADIUS_SM)
-                    .linearGradient({
-                      angle: 150,
-                      colors: [
-                        [rec.coverGradient[0], 0.0],
-                        [rec.coverGradient[1], 1.0]
-                      ]
+            if (this.isTablet) {
+              Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween }) {
+                ForEach(this.familyRecipes, (rec: RecipeItem) => {
+                  Column() {
+                    Row() {
+                      Stack() {
+                        Column()
+                          .width(rec.isFamilyRecipe ? 68 : 52)
+                          .height(rec.isFamilyRecipe ? 56 : 42)
+                          .borderRadius(StyleConstants.RADIUS_SM)
+                          .linearGradient({
+                            angle: 150,
+                            colors: [
+                              [rec.coverGradient[0], 0.0],
+                              [rec.coverGradient[1], 1.0]
+                            ]
+                          })
+
+                        Text(rec.emoji)
+                          .fontSize(rec.isFamilyRecipe ? 26 : 18)
+                      }
+                      .margin({ right: rec.isFamilyRecipe ? 12 : 10 })
+
+                      Column() {
+                        Row() {
+                          Text(rec.name)
+                            .fontSize(rec.isFamilyRecipe ? 18 : StyleConstants.FONT_BODY_SM)
+                            .fontWeight(FontWeight.Bold)
+                            .fontColor(rec.isFamilyRecipe ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_INK)
+
+                          if (!rec.isFamilyRecipe) {
+                            Text('家常菜')
+                              .fontSize(StyleConstants.FONT_BADGE)
+                              .fontColor(ColorConstants.COLOR_BO)
+                              .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                              .borderRadius(StyleConstants.RADIUS_SM)
+                              .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                              .margin({ left: 6 })
+                          }
+
+                          if (this.state.isRecipeCollected(rec.id)) {
+                            Text('🎯 想做')
+                              .fontSize(StyleConstants.FONT_BADGE)
+                              .fontColor(ColorConstants.COLOR_CHA)
+                              .backgroundColor('rgba(200, 155, 60, 0.14)')
+                              .borderRadius(StyleConstants.RADIUS_SM)
+                              .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                              .margin({ left: 4 })
+                          }
+                        }
+
+                        Text(rec.story.length > (rec.isFamilyRecipe ? 32 : 24) ? rec.story.substring(0, rec.isFamilyRecipe ? 32 : 24) + '...' : rec.story)
+                          .fontSize(rec.isFamilyRecipe ? 13 : StyleConstants.FONT_CAPTION)
+                          .fontColor(ColorConstants.COLOR_BO)
+                          .margin({ top: rec.isFamilyRecipe ? 4 : 3 })
+                      }
+                      .layoutWeight(1)
+                      .alignItems(HorizontalAlign.Start)
+
+                      Button('✏️ 编辑')
+                        .height(rec.isFamilyRecipe ? 32 : 28)
+                        .fontSize(StyleConstants.FONT_CAPTION)
+                        .fontColor(ColorConstants.COLOR_ZHU)
+                        .backgroundColor('rgba(158, 43, 37, 0.08)')
+                        .borderRadius(StyleConstants.RADIUS_SM)
+                        .padding({ left: 8, right: 8 })
+                        .onClick(() => {
+                          router.pushUrl({
+                            url: 'pages/mine/CreateRecipePage',
+                            params: { recipeId: rec.id }
+                          });
+                        })
+                    }
+                    .width('100%')
+                    .padding(rec.isFamilyRecipe ? 16 : StyleConstants.SPACE_MD)
+                    .backgroundColor(rec.isFamilyRecipe ? '#FFFDF9' : ColorConstants.COLOR_PAPER)
+                    .borderRadius(StyleConstants.RADIUS_MD)
+                    .border({
+                      width: rec.isFamilyRecipe ? 1.5 : 1,
+                      color: rec.isFamilyRecipe ? 'rgba(158, 43, 37, 0.45)' : ColorConstants.COLOR_DIVIDER
                     })
-
-                  Text(rec.emoji)
-                    .fontSize(rec.isFamilyRecipe ? 26 : 18)
-                }
-                .margin({ right: rec.isFamilyRecipe ? 12 : 10 })
-
-                Column() {
-                  Row() {
-                    Text(rec.name)
-                      .fontSize(rec.isFamilyRecipe ? 18 : StyleConstants.FONT_BODY_SM)
-                      .fontWeight(FontWeight.Bold)
-                      .fontColor(rec.isFamilyRecipe ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_INK)
-
-                    // 设为「家传菜」做放大卡片展示，不打标置顶·家传菜；非家传菜显示「家常菜」
-                    if (!rec.isFamilyRecipe) {
-                      Text('家常菜')
-                        .fontSize(StyleConstants.FONT_BADGE)
-                        .fontColor(ColorConstants.COLOR_BO)
-                        .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                        .borderRadius(StyleConstants.RADIUS_SM)
-                        .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-                        .margin({ left: 6 })
-                    }
-
-                    if (this.state.isRecipeCollected(rec.id)) {
-                      Text('🎯 想做')
-                        .fontSize(StyleConstants.FONT_BADGE)
-                        .fontColor(ColorConstants.COLOR_CHA)
-                        .backgroundColor('rgba(200, 155, 60, 0.14)')
-                        .borderRadius(StyleConstants.RADIUS_SM)
-                        .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-                        .margin({ left: 4 })
-                    }
+                    .shadow(rec.isFamilyRecipe ? {
+                      radius: 8,
+                      color: 'rgba(158, 43, 37, 0.12)',
+                      offsetY: 2
+                    } : undefined)
+                    .margin({ bottom: 10 })
+                    .onClick(() => {
+                      router.pushUrl({
+                        url: 'pages/recipe/RecipeDetailPage',
+                        params: { recipeId: rec.id }
+                      });
+                    })
                   }
-
-                  Text(rec.story.length > (rec.isFamilyRecipe ? 32 : 24) ? rec.story.substring(0, rec.isFamilyRecipe ? 32 : 24) + '...' : rec.story)
-                    .fontSize(rec.isFamilyRecipe ? 13 : StyleConstants.FONT_CAPTION)
-                    .fontColor(ColorConstants.COLOR_BO)
-                    .margin({ top: rec.isFamilyRecipe ? 4 : 3 })
-                }
-                .layoutWeight(1)
-                .alignItems(HorizontalAlign.Start)
-
-                Button('✏️ 编辑')
-                  .height(rec.isFamilyRecipe ? 32 : 28)
-                  .fontSize(StyleConstants.FONT_CAPTION)
-                  .fontColor(ColorConstants.COLOR_ZHU)
-                  .backgroundColor('rgba(158, 43, 37, 0.08)')
-                  .borderRadius(StyleConstants.RADIUS_SM)
-                  .padding({ left: 8, right: 8 })
-                  .onClick(() => {
-                    router.pushUrl({
-                      url: 'pages/mine/CreateRecipePage',
-                      params: { recipeId: rec.id }
-                    });
-                  })
+                  .width('49%')
+                }, (rec: RecipeItem) => `${rec.id}_${rec.isFamilyRecipe ? 'family' : 'normal'}_${this.recipeVersion}`)
               }
               .width('100%')
-              .padding(rec.isFamilyRecipe ? 16 : StyleConstants.SPACE_MD)
-              .backgroundColor(rec.isFamilyRecipe ? '#FFFDF9' : ColorConstants.COLOR_PAPER)
-              .borderRadius(StyleConstants.RADIUS_MD)
-              .border({
-                width: rec.isFamilyRecipe ? 1.5 : 1,
-                color: rec.isFamilyRecipe ? 'rgba(158, 43, 37, 0.45)' : ColorConstants.COLOR_DIVIDER
-              })
-              .shadow(rec.isFamilyRecipe ? {
-                radius: 8,
-                color: 'rgba(158, 43, 37, 0.12)',
-                offsetY: 2
-              } : undefined)
-              .margin({ bottom: rec.isFamilyRecipe ? 12 : 8 })
-              .onClick(() => {
-                router.pushUrl({
-                  url: 'pages/recipe/RecipeDetailPage',
-                  params: { recipeId: rec.id }
-                });
-              })
-            }, (rec: RecipeItem) => `${rec.id}_${rec.isFamilyRecipe ? 'family' : 'normal'}_${this.recipeVersion}`)
+            } else {
+              ForEach(this.familyRecipes, (rec: RecipeItem) => {
+                Row() {
+                  Stack() {
+                    Column()
+                      .width(rec.isFamilyRecipe ? 68 : 52)
+                      .height(rec.isFamilyRecipe ? 56 : 42)
+                      .borderRadius(StyleConstants.RADIUS_SM)
+                      .linearGradient({
+                        angle: 150,
+                        colors: [
+                          [rec.coverGradient[0], 0.0],
+                          [rec.coverGradient[1], 1.0]
+                        ]
+                      })
+
+                    Text(rec.emoji)
+                      .fontSize(rec.isFamilyRecipe ? 26 : 18)
+                  }
+                  .margin({ right: rec.isFamilyRecipe ? 12 : 10 })
+
+                  Column() {
+                    Row() {
+                      Text(rec.name)
+                        .fontSize(rec.isFamilyRecipe ? 18 : StyleConstants.FONT_BODY_SM)
+                        .fontWeight(FontWeight.Bold)
+                        .fontColor(rec.isFamilyRecipe ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_INK)
+
+                      // 设为「家传菜」做放大卡片展示，不打标置顶·家传菜；非家传菜显示「家常菜」
+                      if (!rec.isFamilyRecipe) {
+                        Text('家常菜')
+                          .fontSize(StyleConstants.FONT_BADGE)
+                          .fontColor(ColorConstants.COLOR_BO)
+                          .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                          .borderRadius(StyleConstants.RADIUS_SM)
+                          .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                          .margin({ left: 6 })
+                      }
+
+                      if (this.state.isRecipeCollected(rec.id)) {
+                        Text('🎯 想做')
+                          .fontSize(StyleConstants.FONT_BADGE)
+                          .fontColor(ColorConstants.COLOR_CHA)
+                          .backgroundColor('rgba(200, 155, 60, 0.14)')
+                          .borderRadius(StyleConstants.RADIUS_SM)
+                          .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                          .margin({ left: 4 })
+                      }
+                    }
+
+                    Text(rec.story.length > (rec.isFamilyRecipe ? 32 : 24) ? rec.story.substring(0, rec.isFamilyRecipe ? 32 : 24) + '...' : rec.story)
+                      .fontSize(rec.isFamilyRecipe ? 13 : StyleConstants.FONT_CAPTION)
+                      .fontColor(ColorConstants.COLOR_BO)
+                      .margin({ top: rec.isFamilyRecipe ? 4 : 3 })
+                  }
+                  .layoutWeight(1)
+                  .alignItems(HorizontalAlign.Start)
+
+                  Button('✏️ 编辑')
+                    .height(rec.isFamilyRecipe ? 32 : 28)
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_ZHU)
+                    .backgroundColor('rgba(158, 43, 37, 0.08)')
+                    .borderRadius(StyleConstants.RADIUS_SM)
+                    .padding({ left: 8, right: 8 })
+                    .onClick(() => {
+                      router.pushUrl({
+                        url: 'pages/mine/CreateRecipePage',
+                        params: { recipeId: rec.id }
+                      });
+                    })
+                }
+                .width('100%')
+                .padding(rec.isFamilyRecipe ? 16 : StyleConstants.SPACE_MD)
+                .backgroundColor(rec.isFamilyRecipe ? '#FFFDF9' : ColorConstants.COLOR_PAPER)
+                .borderRadius(StyleConstants.RADIUS_MD)
+                .border({
+                  width: rec.isFamilyRecipe ? 1.5 : 1,
+                  color: rec.isFamilyRecipe ? 'rgba(158, 43, 37, 0.45)' : ColorConstants.COLOR_DIVIDER
+                })
+                .shadow(rec.isFamilyRecipe ? {
+                  radius: 8,
+                  color: 'rgba(158, 43, 37, 0.12)',
+                  offsetY: 2
+                } : undefined)
+                .margin({ bottom: rec.isFamilyRecipe ? 12 : 8 })
+                .onClick(() => {
+                  router.pushUrl({
+                    url: 'pages/recipe/RecipeDetailPage',
+                    params: { recipeId: rec.id }
+                  });
+                })
+              }, (rec: RecipeItem) => `${rec.id}_${rec.isFamilyRecipe ? 'family' : 'normal'}_${this.recipeVersion}`)
+            }
           }
         }
         .width('100%')
+        .constraintSize({ maxWidth: this.isTablet ? 900 : '100%' })
         .padding({ left: 16, right: 16, bottom: 30 })
       }
       .width('100%')
+      .alignItems(HorizontalAlign.Center)
     }
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Spring)

@@ -23,6 +23,7 @@ class StatusDisplayInfo {
 @Entry
 @Component
 struct FridgePage {
+  @StorageProp('isTablet') isTablet: boolean = false;
   @StorageLink('inventoryVersion') inventoryVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
   @State activeStorageFilter: string = '全部';
@@ -311,6 +312,7 @@ struct FridgePage {
             .margin({ bottom: 80 })
           }
           .width('100%')
+          .constraintSize({ maxWidth: this.isTablet ? 860 : '100%' })
           .justifyContent(FlexAlign.Start)
           .alignItems(HorizontalAlign.Start)
           .padding(StyleConstants.SPACE_MD)
@@ -324,7 +326,7 @@ struct FridgePage {
       .width('100%')
       .height('100%')
       .justifyContent(FlexAlign.Start)
-      .alignItems(HorizontalAlign.Start)
+      .alignItems(HorizontalAlign.Center)
       .backgroundColor(Color.Transparent)
       .backgroundImage($rawfile('image/img_background.png'), ImageRepeat.NoRepeat)
       .backgroundImageSize(ImageSize.Cover)
@@ -334,6 +336,7 @@ struct FridgePage {
       Row() {
         Button('用当前冰箱库存，看看今天能做什么 →')
           .width('100%')
+          .constraintSize({ maxWidth: this.isTablet ? 860 : '100%' })
           .height(44)
           .backgroundColor(ColorConstants.COLOR_ZHU)
           .fontColor(Color.White)
@@ -345,12 +348,15 @@ struct FridgePage {
           })
       }
       .width('100%')
+      .justifyContent(FlexAlign.Center)
       .padding({ left: 16, right: 16, bottom: 16 })
 
       // 添加食材半模态弹窗
       if (this.showAddDialog) {
         Column() {
-          Blank()
+          if (!this.isTablet) {
+            Blank()
+          }
 
           Column() {
             Row() {
@@ -492,8 +498,9 @@ struct FridgePage {
               })
           }
           .width('100%')
+          .constraintSize({ maxWidth: this.isTablet ? 540 : '100%' })
           .backgroundColor(ColorConstants.COLOR_PAPER)
-          .borderRadius({ topLeft: StyleConstants.RADIUS_XL, topRight: StyleConstants.RADIUS_XL })
+          .borderRadius(this.isTablet ? StyleConstants.RADIUS_XL : { topLeft: StyleConstants.RADIUS_XL, topRight: StyleConstants.RADIUS_XL })
           .padding(StyleConstants.SPACE_LG)
           .shadow({
             radius: 16,
@@ -504,6 +511,8 @@ struct FridgePage {
         }
         .width('100%')
         .height('100%')
+        .alignItems(HorizontalAlign.Center)
+        .justifyContent(this.isTablet ? FlexAlign.Center : FlexAlign.End)
         .backgroundColor('rgba(0, 0, 0, 0.45)')
       }
     }

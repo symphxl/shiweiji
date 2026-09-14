@@ -32,6 +32,7 @@ interface DynamicStep {
 @Entry
 @Component
 struct CreateRecipePage {
+  @StorageProp('isTablet') isTablet: boolean = false;
   @State private state: AppDataState = AppDataState.getInstance();
 
   readonly commonUnits: string[] = ['个', '克', '斤', '两', '千克', '袋', '盒', '块', '根', '瓶', '勺', '包', '把', '只', '片', 'mL', '适量'];
@@ -691,14 +692,18 @@ struct CreateRecipePage {
           }
         }
         .width('100%')
+        .constraintSize({ maxWidth: this.isTablet ? 840 : '100%' })
         .padding(StyleConstants.SPACE_MD)
       }
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
       .layoutWeight(1)
+      .width('100%')
+      .align(Alignment.Top)
     }
     .width('100%')
     .height('100%')
+    .alignItems(HorizontalAlign.Center)
     .backgroundColor(ColorConstants.COLOR_XUAN)
     .backgroundImage($rawfile('image/img_background.png'), ImageRepeat.NoRepeat)
     .backgroundImageSize(ImageSize.Cover)

@@ -26,6 +26,7 @@ import { COOK_INGREDIENTS, COOK_CATEGORIES } from '../../common/services/CookRep
 @Component
 export struct RecipeListPage {
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageProp('isTablet') isTablet: boolean = false;
   // 固定食材库变更通知（新增/清空食材后自增，驱动页面刷新）
   @StorageProp('ingredientVersion') ingredientVersion: number = 0;
   @StorageProp('inventoryVersion') inventoryVersion: number = 0;
@@ -805,20 +806,43 @@ export struct RecipeListPage {
                 }
               })
             } else {
-              ForEach(this.filteredRecipes.slice(0, this.RESULT_LIMIT), (rec: RecipeItem) => {
-                RecipeCard({
-                  recipe: rec,
-                  matchBadge: this.buildFilteredBadge(rec),
-                  badgeColor: ColorConstants.COLOR_QING,
-                  missingText: '',
-                  onCardClick: () => {
-                    router.pushUrl({
-                      url: 'pages/recipe/RecipeDetailPage',
-                      params: { recipeId: rec.id }
-                    });
-                  }
-                })
-              }, (rec: RecipeItem) => rec.id)
+              if (this.isTablet) {
+                Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween }) {
+                  ForEach(this.filteredRecipes.slice(0, this.RESULT_LIMIT), (rec: RecipeItem) => {
+                    Column() {
+                      RecipeCard({
+                        recipe: rec,
+                        matchBadge: this.buildFilteredBadge(rec),
+                        badgeColor: ColorConstants.COLOR_QING,
+                        missingText: '',
+                        onCardClick: () => {
+                          router.pushUrl({
+                            url: 'pages/recipe/RecipeDetailPage',
+                            params: { recipeId: rec.id }
+                          });
+                        }
+                      })
+                    }
+                    .width('49%')
+                  }, (rec: RecipeItem) => rec.id)
+                }
+                .width('100%')
+              } else {
+                ForEach(this.filteredRecipes.slice(0, this.RESULT_LIMIT), (rec: RecipeItem) => {
+                  RecipeCard({
+                    recipe: rec,
+                    matchBadge: this.buildFilteredBadge(rec),
+                    badgeColor: ColorConstants.COLOR_QING,
+                    missingText: '',
+                    onCardClick: () => {
+                      router.pushUrl({
+                        url: 'pages/recipe/RecipeDetailPage',
+                        params: { recipeId: rec.id }
+                      });
+                    }
+                  })
+                }, (rec: RecipeItem) => rec.id)
+              }
 
               if (this.filteredRecipes.length > this.RESULT_LIMIT) {
                 Text(`仅展示前 ${this.RESULT_LIMIT} 道，继续勾选食材可缩小范围（共 ${this.filteredRecipes.length} 道）`)
@@ -854,27 +878,52 @@ export struct RecipeListPage {
                 }
               })
             } else {
-              ForEach(this.matchedResults, (res: MatchedRecipeResult) => {
-                RecipeCard({
-                  recipe: res.recipe,
-                  matchBadge: res.matchBadge,
-                  badgeColor: res.badgeColor,
-                  missingText: res.missingIngredients.length > 0 ? `缺：${res.missingIngredients.join('、')}` : '',
-                  onCardClick: () => {
-                    router.pushUrl({
-                      url: 'pages/recipe/RecipeDetailPage',
-                      params: { recipeId: res.recipe.id }
-                    });
-                  }
-                })
-              }, (res: MatchedRecipeResult) => res.recipe.id)
+              if (this.isTablet) {
+                Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween }) {
+                  ForEach(this.matchedResults, (res: MatchedRecipeResult) => {
+                    Column() {
+                      RecipeCard({
+                        recipe: res.recipe,
+                        matchBadge: res.matchBadge,
+                        badgeColor: res.badgeColor,
+                        missingText: res.missingIngredients.length > 0 ? `缺：${res.missingIngredients.join('、')}` : '',
+                        onCardClick: () => {
+                          router.pushUrl({
+                            url: 'pages/recipe/RecipeDetailPage',
+                            params: { recipeId: res.recipe.id }
+                          });
+                        }
+                      })
+                    }
+                    .width('49%')
+                  }, (res: MatchedRecipeResult) => res.recipe.id)
+                }
+                .width('100%')
+              } else {
+                ForEach(this.matchedResults, (res: MatchedRecipeResult) => {
+                  RecipeCard({
+                    recipe: res.recipe,
+                    matchBadge: res.matchBadge,
+                    badgeColor: res.badgeColor,
+                    missingText: res.missingIngredients.length > 0 ? `缺：${res.missingIngredients.join('、')}` : '',
+                    onCardClick: () => {
+                      router.pushUrl({
+                        url: 'pages/recipe/RecipeDetailPage',
+                        params: { recipeId: res.recipe.id }
+                      });
+                    }
+                  })
+                }, (res: MatchedRecipeResult) => res.recipe.id)
+              }
             }
           }
         }
         .width('100%')
+        .constraintSize({ maxWidth: this.isTablet ? 960 : '100%' })
         .padding({ left: 16, right: 16, bottom: 30 })
       }
       .width('100%')
+      .alignItems(HorizontalAlign.Center)
     }
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Spring)

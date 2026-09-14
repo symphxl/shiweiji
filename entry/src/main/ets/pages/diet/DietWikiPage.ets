@@ -14,6 +14,7 @@ import { IngredientItem } from '../../common/models/IngredientModel';
 @Component
 export struct DietWikiPage {
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageProp('isTablet') isTablet: boolean = false;
   @State seasonalIndex: number = 0;
   @State activeAtlasCategory: string = '全部';
 
@@ -312,46 +313,89 @@ export struct DietWikiPage {
           .width('100%')
           .margin({ bottom: 8 })
 
-          ForEach(this.knowledgeList, (item: CookingKnowledgeItem) => {
-            Column() {
-              Row() {
-                Text(item.title)
-                  .fontSize(StyleConstants.FONT_BODY_SM)
-                  .fontWeight(FontWeight.Bold)
-                  .fontColor(ColorConstants.COLOR_INK)
+          if (this.isTablet) {
+            Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween }) {
+              ForEach(this.knowledgeList, (item: CookingKnowledgeItem) => {
+                Column() {
+                  Row() {
+                    Text(item.title)
+                      .fontSize(StyleConstants.FONT_BODY_SM)
+                      .fontWeight(FontWeight.Bold)
+                      .fontColor(ColorConstants.COLOR_INK)
 
-                Blank()
+                    Blank()
 
-                Text(item.category)
-                  .fontSize(StyleConstants.FONT_BADGE)
-                  .fontColor(ColorConstants.COLOR_QING)
-                  .backgroundColor('rgba(95, 113, 97, 0.12)')
-                  .borderRadius(StyleConstants.RADIUS_SM)
-                  .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-              }
-              .width('100%')
-              .margin({ bottom: 4 })
+                    Text(item.category)
+                      .fontSize(StyleConstants.FONT_BADGE)
+                      .fontColor(ColorConstants.COLOR_QING)
+                      .backgroundColor('rgba(95, 113, 97, 0.12)')
+                      .borderRadius(StyleConstants.RADIUS_SM)
+                      .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                  }
+                  .width('100%')
+                  .margin({ bottom: 4 })
 
-              Text(item.summary)
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(ColorConstants.COLOR_SUMI)
-                .lineHeight(19)
+                  Text(item.summary)
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_SUMI)
+                    .lineHeight(19)
+                }
+                .width('49%')
+                .padding(StyleConstants.SPACE_MD)
+                .backgroundColor(ColorConstants.COLOR_PAPER)
+                .borderRadius(StyleConstants.RADIUS_MD)
+                .border({
+                  width: 1,
+                  color: ColorConstants.COLOR_DIVIDER
+                })
+                .margin({ bottom: 10 })
+              }, (item: CookingKnowledgeItem) => item.id)
             }
             .width('100%')
-            .padding(StyleConstants.SPACE_MD)
-            .backgroundColor(ColorConstants.COLOR_PAPER)
-            .borderRadius(StyleConstants.RADIUS_MD)
-            .border({
-              width: 1,
-              color: ColorConstants.COLOR_DIVIDER
-            })
-            .margin({ bottom: 8 })
-          }, (item: CookingKnowledgeItem) => item.id)
+          } else {
+            ForEach(this.knowledgeList, (item: CookingKnowledgeItem) => {
+              Column() {
+                Row() {
+                  Text(item.title)
+                    .fontSize(StyleConstants.FONT_BODY_SM)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(ColorConstants.COLOR_INK)
+
+                  Blank()
+
+                  Text(item.category)
+                    .fontSize(StyleConstants.FONT_BADGE)
+                    .fontColor(ColorConstants.COLOR_QING)
+                    .backgroundColor('rgba(95, 113, 97, 0.12)')
+                    .borderRadius(StyleConstants.RADIUS_SM)
+                    .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                }
+                .width('100%')
+                .margin({ bottom: 4 })
+
+                Text(item.summary)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_SUMI)
+                  .lineHeight(19)
+              }
+              .width('100%')
+              .padding(StyleConstants.SPACE_MD)
+              .backgroundColor(ColorConstants.COLOR_PAPER)
+              .borderRadius(StyleConstants.RADIUS_MD)
+              .border({
+                width: 1,
+                color: ColorConstants.COLOR_DIVIDER
+              })
+              .margin({ bottom: 8 })
+            }, (item: CookingKnowledgeItem) => item.id)
+          }
         }
         .width('100%')
+        .constraintSize({ maxWidth: this.isTablet ? 900 : '100%' })
         .padding({ left: 16, right: 16, bottom: 30 })
       }
       .width('100%')
+      .alignItems(HorizontalAlign.Center)
     }
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Spring)

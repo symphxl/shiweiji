@@ -54,6 +54,16 @@ export default class EntryAbility extends UIAbility {
         const bottomSafeHeight = px2vp(bottomArea.bottomRect.height);
         AppStorage.setOrCreate('bottomSafeHeight', bottomSafeHeight > 0 ? bottomSafeHeight : 20);
 
+        // 平板与响应式大屏断点管理（>=600vp 判定为平板/折叠屏大屏形态）
+        const winRect = windowClass.getWindowProperties().windowRect;
+        const widthVp = px2vp(winRect.width);
+        const heightVp = px2vp(winRect.height);
+        const isTablet = widthVp >= 600;
+        AppStorage.setOrCreate('windowWidth', widthVp);
+        AppStorage.setOrCreate('windowHeight', heightVp);
+        AppStorage.setOrCreate('isTablet', isTablet);
+        AppStorage.setOrCreate('curBreakpoint', widthVp >= 840 ? 'lg' : (widthVp >= 600 ? 'md' : 'sm'));
+
         // 监听动态避让区变化（横竖屏切换、挖孔避让变动）
         windowClass.on('avoidAreaChange', (data) => {
           if (data.type === window.AvoidAreaType.TYPE_SYSTEM) {
@@ -63,6 +73,17 @@ export default class EntryAbility extends UIAbility {
             const newBottom = px2vp(data.area.bottomRect.height);
             AppStorage.setOrCreate('bottomSafeHeight', newBottom > 0 ? newBottom : 20);
           }
+        });
+
+        // 监听动态窗口尺寸变化（平板横竖屏切换、分屏拖动、折叠屏开合）
+        windowClass.on('windowSizeChange', (newSize) => {
+          const w = px2vp(newSize.width);
+          const h = px2vp(newSize.height);
+          const tab = w >= 600;
+          AppStorage.setOrCreate('windowWidth', w);
+          AppStorage.setOrCreate('windowHeight', h);
+          AppStorage.setOrCreate('isTablet', tab);
+          AppStorage.setOrCreate('curBreakpoint', w >= 840 ? 'lg' : (w >= 600 ? 'md' : 'sm'));
         });
       } catch (exception) {
         hilog.error(DOMAIN, TAG, 'Failed to configure full screen avoid areas. Cause: %{public}s', JSON.stringify(exception) ?? '');

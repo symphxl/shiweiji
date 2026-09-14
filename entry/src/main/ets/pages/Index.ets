@@ -15,6 +15,8 @@ import { MinePage } from './mine/MinePage';
 @Component
 struct Index {
   @StorageProp('bottomSafeHeight') bottomSafeHeight: number = 20;
+  @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageProp('isTablet') isTablet: boolean = false;
   @State currentTabIndex: number = 0;
   private tabController: TabsController = new TabsController();
 
@@ -30,26 +32,45 @@ struct Index {
 
   @Builder
   TabItemBuilder(index: number, icon: string, title: string) {
-    Column() {
-      Text(icon)
-        .fontSize(18)
-        .margin({ bottom: 2 })
+    if (this.isTablet) {
+      Column() {
+        Text(icon)
+          .fontSize(22)
+          .margin({ bottom: 4 })
 
-      Text(title)
-        .fontSize(StyleConstants.FONT_BADGE)
-        .fontWeight(this.currentTabIndex === index ? FontWeight.Bold : FontWeight.Normal)
-        .fontColor(this.currentTabIndex === index ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
+        Text(title)
+          .fontSize(StyleConstants.FONT_CAPTION)
+          .fontWeight(this.currentTabIndex === index ? FontWeight.Bold : FontWeight.Normal)
+          .fontColor(this.currentTabIndex === index ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
+      }
+      .width(72)
+      .height(64)
+      .borderRadius(StyleConstants.RADIUS_MD)
+      .backgroundColor(this.currentTabIndex === index ? 'rgba(158, 43, 37, 0.10)' : Color.Transparent)
+      .justifyContent(FlexAlign.Center)
+      .margin({ top: 8, bottom: 8 })
+    } else {
+      Column() {
+        Text(icon)
+          .fontSize(18)
+          .margin({ bottom: 2 })
+
+        Text(title)
+          .fontSize(StyleConstants.FONT_BADGE)
+          .fontWeight(this.currentTabIndex === index ? FontWeight.Bold : FontWeight.Normal)
+          .fontColor(this.currentTabIndex === index ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
+      }
+      .width('100%')
+      .height(56 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 0))
+      .padding({ bottom: this.bottomSafeHeight > 0 ? this.bottomSafeHeight * 0.6 : 0 })
+      .justifyContent(FlexAlign.Center)
     }
-    .width('100%')
-    .height(56 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 0))
-    .padding({ bottom: this.bottomSafeHeight > 0 ? this.bottomSafeHeight * 0.6 : 0 })
-    .justifyContent(FlexAlign.Center)
   }
 
   build() {
     Column() {
       Tabs({
-        barPosition: BarPosition.End,
+        barPosition: this.isTablet ? BarPosition.Start : BarPosition.End,
         controller: this.tabController,
         index: this.currentTabIndex
       }) {
@@ -82,6 +103,7 @@ struct Index {
         }
         .tabBar(this.TabItemBuilder(3, '🥡', '我的'))
       }
+      .vertical(this.isTablet)
       .scrollable(false)
       .animationDuration(StyleConstants.DURATION_FAST)
       .onChange((index: number) => {
@@ -89,10 +111,11 @@ struct Index {
       })
       .backgroundColor(Color.Transparent)
       .barBackgroundColor(ColorConstants.COLOR_XUAN)
-      .barHeight(56 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 0))
+      .barWidth(this.isTablet ? 84 : '100%')
+      .barHeight(this.isTablet ? '100%' : (56 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 0)))
       .barMode(BarMode.Fixed)
       .border({
-        width: { top: 0.5 },
+        width: this.isTablet ? { right: 0.5 } : { top: 0.5 },
         color: ColorConstants.COLOR_DIVIDER
       })
     }
