@@ -34,7 +34,12 @@ export const EXCEL_INGREDIENT_NAMES: string[] = [
   "米",
   "面食",
   "方便面",
-  "面包"
+  "面包",
+  "莲藕",
+  "菱角",
+  "秋梨",
+  "板栗",
+  "百合"
 ];
 
 export const EXCEL_INGREDIENT_CATEGORIES: string[] = [
@@ -506,5 +511,80 @@ export const EXCEL_INGREDIENTS: IngredientItem[] = [
     bestPairing: '鸡蛋、香肠、午餐肉',
     pairingNotice: '长霉变质严禁切除继续食用。',
     cookingSuggestion: '平底锅无油轻煎两面金黄酥脆。'
+  },
+  {
+    id: 'ing_xl_033',
+    name: '莲藕',
+    category: '蔬菜',
+    alias: ["莲根", "藕"],
+    caloriesPer100g: 74,
+    seasonMonths: '8–11 月（秋季正当时）',
+    keyNutrient: '膳食纤维 · 维C 44mg · 多酚',
+    nutritionSummary: '秋令时珍，润燥止渴、清心安神。煨汤粉糯拉丝，清炒爽脆多汁。',
+    pickTips: '表皮微黄带泥沙，藕节短粗饱满，孔道洁净无黑斑。',
+    storageTips: '浸于清水中每日换水，或裹保鲜膜冷藏。',
+    bestPairing: '排骨、猪蹄、花生',
+    pairingNotice: '生食偏凉性，脾胃虚寒者建议熟食煲汤。',
+    cookingSuggestion: '七孔藕适宜煲老火慢汤，九孔藕适宜脆炒拌凉菜。'
+  },
+  {
+    id: 'ing_xl_034',
+    name: '菱角',
+    category: '蔬菜',
+    alias: ["风菱", "水栗", "菱实"],
+    caloriesPer100g: 98,
+    seasonMonths: '8–10 月（秋季水八仙）',
+    keyNutrient: '优质淀粉 · 钾 437mg · 铁',
+    nutritionSummary: '水八仙之一，秋分前后最鲜甜。生食清脆甘甜，熟食粉糯健脾。',
+    pickTips: '外皮黑红硬实，两角尖挺，摇动无声者肉质饱满。',
+    storageTips: '沥干表面水分后冷藏，建议尽快剥壳烹饪。',
+    bestPairing: '排骨、鸡肉、荷叶',
+    pairingNotice: '水生植物表皮易有寄生虫，严禁生吃带壳菱角，煮熟食用最安全。',
+    cookingSuggestion: '盐水加八角慢煮20分钟即可当零食，或切块与仔鸡同炖。'
+  },
+  {
+    id: 'ing_xl_035',
+    name: '秋梨',
+    category: '蔬菜',
+    alias: ["雪梨", "鸭梨", "蜜梨"],
+    caloriesPer100g: 44,
+    seasonMonths: '8–11 月（秋令润燥佳品）',
+    keyNutrient: '水分 86% · 绿原酸 · 苹果酸',
+    nutritionSummary: '「白露秋分夜，一夜凉一夜。秋梨润肺生津，止咳化痰，是金秋防燥第一果品。」',
+    pickTips: '果形圆润对称，果脐深而圆整，表皮细腻无黑斑伤痕。',
+    storageTips: '包裹纸张后置于冰箱冷藏室，可保存 2-3 周。',
+    bestPairing: '银耳、百合、川贝、枸杞',
+    pairingNotice: '梨性偏寒，脾胃虚寒易腹泻者不宜空腹过量生食，可炖煮熟食。',
+    cookingSuggestion: '去核挖空加冰糖枸杞隔水蒸40分钟成秋梨膏或糖水。'
+  },
+  {
+    id: 'ing_xl_036',
+    name: '板栗',
+    category: '主食',
+    alias: ["栗子", "毛栗", "大栗"],
+    caloriesPer100g: 212,
+    seasonMonths: '9–11 月（金秋收获）',
+    keyNutrient: '碳水化合物 · 维C 24mg · 钾',
+    nutritionSummary: '「千王之果」，营养丰富饱腹感强，具有健脾补肾、厚肠胃之功效。',
+    pickTips: '外壳棕红油亮微有绒毛，掂在手里沉甸甸，捏起来坚硬不空壳。',
+    storageTips: '阴凉通风干燥处摊开保存防受潮生虫，或冷冻生栗肉。',
+    bestPairing: '鸡肉、鸭肉、排骨、香菇',
+    pairingNotice: '淀粉热量较高，糖尿病及减重人群需替代部分主食计算。',
+    cookingSuggestion: '开水烫过去内皮，与土鸡块同红烧慢炖，栗肉吸尽肉汁香甜软糯。'
+  },
+  {
+    id: 'ing_xl_037',
+    name: '百合',
+    category: '蔬菜',
+    alias: ["鲜百合", "百合瓣", "白百合"],
+    caloriesPer100g: 162,
+    seasonMonths: '8–10 月（秋季采收）',
+    keyNutrient: '百合苷 · 蛋白质 · 黏液质',
+    nutritionSummary: '色白如玉，甘凉清润，清心安神，润肺止咳。与银耳并称秋季养生双绝。',
+    pickTips: '鳞片肥厚洁白无黑斑，包拢紧密不松散。',
+    storageTips: '真空包装或湿沙中冷藏，鲜百合不宜久置。',
+    bestPairing: '西芹、南瓜、雪梨、银耳',
+    pairingNotice: '风寒咳嗽及脾胃虚寒有虚溏者不宜多食。',
+    cookingSuggestion: '焯水10秒去涩，与西芹腰果清炒，口感清脆甘甜。'
   }
 ];

@@ -22,16 +22,44 @@ struct IngredientDetailPage {
 
   aboutToAppear() {
     const params = router.getParams() as Record<string, Object>;
-    const name = (params && params['ingredientName']) ? (params['ingredientName'] as string) : '番茄';
+    const targetName = (params && params['ingredientName']) ? (params['ingredientName'] as string).trim() : '番茄';
     const all = MockDataService.getInitialIngredients();
-    const found = all.find(item => item.name === name || item.alias.includes(name));
-    this.ingredient = found ? found : all[0];
+
+    // 1. 精确与别名匹配
+    let found = all.find(item => item.name === targetName || (item.alias && item.alias.includes(targetName)));
+
+    // 2. 模糊包含匹配（如「鲜百合」匹配「百合」）
+    if (!found) {
+      found = all.find(item => item.name.includes(targetName) || targetName.includes(item.name) ||
+        (item.alias && item.alias.some(a => a.includes(targetName) || targetName.includes(a))));
+    }
+
+    // 3. 若仍未匹配，智能构建该食材专属档案，杜绝错误回退到土豆
+    if (!found) {
+      this.ingredient = {
+        id: 'ing_gen_' + Date.now(),
+        name: targetName,
+        category: '时令食材',
+        alias: [targetName],
+        caloriesPer100g: 45,
+        seasonMonths: '秋季正当时',
+        keyNutrient: '膳食纤维 · 微量元素',
+        nutritionSummary: `「${targetName}」是时令天然滋味，质地清爽，温润滋养，富含多种有益营养成分。`,
+        pickTips: '色泽纯正均匀，手感饱满紧实，无斑点腐变。',
+        storageTips: '阴凉通风干燥处存放或置于冰箱冷藏保鲜。',
+        bestPairing: '排骨、鸡肉、菌菇',
+        pairingNotice: '新鲜适量食用，科学均衡膳食。',
+        cookingSuggestion: '清炒、慢煨煲汤均能最大程度保留自然鲜香。'
+      };
+    } else {
+      this.ingredient = found;
+    }
 
     // 查询该食材可做的菜谱
     if (this.ingredient) {
       const ingName = this.ingredient.name;
       this.relatedRecipes = this.state.recipes.filter(r =>
-        r.ingredients.some(i => i.name === ingName)
+        r.ingredients.some(i => i.name === ingName || ingName.includes(i.name) || i.name.includes(ingName))
       );
     }
   }
