@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "storeFile": "/Users/apple/Downloads/zha/zha/swj_key_store.p12",
-          "storePassword": "00000020D99C8FAF2A62E6866AE9D3AC42F322E56DC1B4A9B181F0556C0B123288A9BA50AB1BE7E829D450D207DF97CE",
+          "storeFile": "E:/install/DevEcoStudio/program/file/swj_key_store.p12",
+          "storePassword": "00000020B9BEF8CF1D584D17D50A3FC784D4298D038F1B90DE084E1F09E713FE4398B330082DF454E8CA0CC76E1AC671",
           "keyAlias": "swj",
-          "keyPassword": "0000002056246EDAC8AA309B4E87C56D9F5154C0041413840AF9078BFA9D1F7D30FC548280B174EFD55486DAE415FD89",
+          "keyPassword": "000000207BDA97909420F5F6A6FFF8C2B7AD0D4CB7D721F53BA4DB68529858BF8A7FECAD047560A0CAF041201B1E9E37",
           "signAlg": "SHA256withECDSA",
-          "profile": "/Users/apple/Downloads/zha/zha/release.p7b",
-          "certpath": "/Users/apple/Downloads/zha/zha/release.cer"
+          "profile": "E:/install/DevEcoStudio/program/file/swj_winRelease.p7b",
+          "certpath": "E:/install/DevEcoStudio/program/file/cer_win.cer"
         }
       }
     ],
