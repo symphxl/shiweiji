@@ -1,4 +1,4 @@
-﻿import router from '@ohos.router';
+import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
 import { ColorConstants } from '../../common/constants/ColorConstants';
 import { StyleConstants } from '../../common/constants/StyleConstants';
@@ -290,7 +290,7 @@ export struct MinePage {
                   .margin({ top: 4 })
               }
               .onClick(() => {
-                promptAction.showToast({ message: '偏好已保存：川湘风味 · 家常少油 · 滋补润燥' });
+                promptAction.showToast({ message: '功能后续版本开放... ...' });
               })
             }
           }

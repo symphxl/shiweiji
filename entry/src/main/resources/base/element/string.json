@@ -15,6 +15,14 @@
     {
       "name": "app_slogan",
       "value": "让每一顿饭，都有值得记录的故事。"
+    },
+    {
+      "name": "reason_read_imagevideo",
+      "value": "用于选取相册中的美食照片作为菜谱封面或个人头像"
+    },
+    {
+      "name": "reason_write_imagevideo",
+      "value": "用于将菜谱长图与美食记录卡片导出保存到相册"
     }
   ]
 }

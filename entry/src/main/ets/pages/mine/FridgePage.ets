@@ -45,8 +45,12 @@ struct FridgePage {
     return this.state.inventory.filter(item => item.storageType === this.activeStorageFilter);
   }
 
+  getExpiredItems(): InventoryItem[] {
+    return this.state.inventory.filter(item => item.daysRemaining <= 0 && item.quantity > 0);
+  }
+
   getExpiringItems(): InventoryItem[] {
-    return this.state.inventory.filter(item => item.daysRemaining <= 2 && item.quantity > 0);
+    return this.state.inventory.filter(item => item.daysRemaining > 0 && item.daysRemaining <= 2 && item.quantity > 0);
   }
 
   getStatusDisplay(days: number): StatusDisplayInfo {
@@ -94,6 +98,30 @@ struct FridgePage {
 
         Scroll() {
           Column() {
+            // 过期严重警示广播条（重点色绯红提醒）
+            if (this.getExpiredItems().length > 0) {
+              Row() {
+                Text('⛔')
+                  .fontSize(16)
+                  .margin({ right: 6 })
+
+                Text(`过期预警：${this.getExpiredItems().map(i => i.name).join('、')} 已过期，请尽快清理！`)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_ERROR)
+                  .fontWeight(FontWeight.Bold)
+                  .layoutWeight(1)
+              }
+              .width('100%')
+              .backgroundColor('rgba(166, 58, 46, 0.12)')
+              .borderRadius(StyleConstants.RADIUS_MD)
+              .border({
+                width: 1.5,
+                color: ColorConstants.COLOR_ERROR
+              })
+              .padding(StyleConstants.SPACE_MD)
+              .margin({ bottom: 8 })
+            }
+
             // 临期预警广播条
             if (this.getExpiringItems().length > 0) {
               Row() {
@@ -157,7 +185,7 @@ struct FridgePage {
                       Text(item.name)
                         .fontSize(StyleConstants.FONT_BODY)
                         .fontWeight(FontWeight.Bold)
-                        .fontColor(ColorConstants.COLOR_INK)
+                        .fontColor(item.daysRemaining <= 0 ? ColorConstants.COLOR_ERROR : ColorConstants.COLOR_INK)
 
                       Text(item.category)
                         .fontSize(8.5)
@@ -166,10 +194,22 @@ struct FridgePage {
                         .borderRadius(StyleConstants.RADIUS_SM)
                         .padding({ left: 4, right: 4, top: 1, bottom: 1 })
                         .margin({ left: 6 })
+
+                      if (item.daysRemaining <= 0) {
+                        Text('已过期')
+                          .fontSize(8.5)
+                          .fontWeight(FontWeight.Bold)
+                          .fontColor(Color.White)
+                          .backgroundColor(ColorConstants.COLOR_ERROR)
+                          .borderRadius(StyleConstants.RADIUS_SM)
+                          .padding({ left: 4, right: 4, top: 1, bottom: 1 })
+                          .margin({ left: 4 })
+                      }
                     }
 
                     Text(`● ${this.getStatusDisplay(item.daysRemaining).text} · ${item.storageType}`)
                       .fontSize(StyleConstants.FONT_CAPTION)
+                      .fontWeight(item.daysRemaining <= 0 ? FontWeight.Bold : FontWeight.Normal)
                       .fontColor(this.getStatusDisplay(item.daysRemaining).color)
                       .margin({ top: 3 })
                   }
@@ -210,11 +250,11 @@ struct FridgePage {
                 }
                 .width('100%')
                 .padding(StyleConstants.SPACE_MD)
-                .backgroundColor(ColorConstants.COLOR_PAPER)
+                .backgroundColor(item.daysRemaining <= 0 ? 'rgba(166, 58, 46, 0.08)' : ColorConstants.COLOR_PAPER)
                 .borderRadius(StyleConstants.RADIUS_MD)
                 .border({
-                  width: 1,
-                  color: ColorConstants.COLOR_DIVIDER
+                  width: item.daysRemaining <= 0 ? 1.5 : 1,
+                  color: item.daysRemaining <= 0 ? ColorConstants.COLOR_ERROR : ColorConstants.COLOR_DIVIDER
                 })
                 .margin({ bottom: 8 })
               }, (item: InventoryItem) => item.id + item.quantity.toString())

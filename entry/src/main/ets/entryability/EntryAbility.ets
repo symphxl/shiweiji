@@ -1,4 +1,4 @@
-import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { AbilityConstant, UIAbility, Want, abilityAccessCtrl } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { AppDataState } from '../common/services/AppDataState';
@@ -74,6 +74,21 @@ export default class EntryAbility extends UIAbility {
         return;
       }
       hilog.info(DOMAIN, TAG, '%{public}s', 'Succeeded in loading the content.');
+
+      // 申请手机文件/相册与多媒体访问权限，保障单机持久化及素材选取
+      try {
+        const atManager = abilityAccessCtrl.createAtManager();
+        atManager.requestPermissionsFromUser(this.context, [
+          'ohos.permission.READ_IMAGEVIDEO',
+          'ohos.permission.WRITE_IMAGEVIDEO'
+        ]).then((data) => {
+          hilog.info(DOMAIN, TAG, 'Permission request finished: %{public}s', JSON.stringify(data));
+        }).catch((err: Error) => {
+          hilog.warn(DOMAIN, TAG, 'Permission request failed: %{public}s', err.message);
+        });
+      } catch (e) {
+        hilog.warn(DOMAIN, TAG, 'Failed to call requestPermissionsFromUser');
+      }
     });
   }
 

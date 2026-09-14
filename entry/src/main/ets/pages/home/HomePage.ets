@@ -19,7 +19,9 @@ export struct HomePage {
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   @StorageLink('inventoryVersion') @Watch('onInventoryChanged') inventoryVersion: number = 0;
   @StorageLink('recipeVersion') @Watch('onRecipeVersionChanged') recipeVersion: number = 0;
+  @StorageLink('profileVersion') @Watch('onProfileChanged') profileVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
+  @State userGreetingText: string = '';
   @State todayRecipes: RecipeItem[] = [];
   @State recommendIndex: number = 0;
 
@@ -36,7 +38,16 @@ export struct HomePage {
   readonly storageOptions: string[] = ['冷藏', '冷冻', '常温'];
 
   aboutToAppear() {
+    this.updateUserGreeting();
     this.refreshTodayRecipes();
+  }
+
+  onProfileChanged() {
+    this.updateUserGreeting();
+  }
+
+  private updateUserGreeting() {
+    this.userGreetingText = DateUtil.formatUserGreeting(this.state.userProfile.nickname);
   }
 
   onInventoryChanged() {
@@ -248,7 +259,7 @@ export struct HomePage {
 
         // Hero 问候与东方诗意语录
         Column() {
-          Text('晚上好，蕙兰')
+          Text(this.userGreetingText.length > 0 ? this.userGreetingText : DateUtil.formatUserGreeting(this.state.userProfile.nickname))
             .fontSize(StyleConstants.FONT_CAPTION)
             .fontColor(ColorConstants.COLOR_BO)
 
