@@ -216,18 +216,43 @@ export struct RecipeListPage {
   }
 
   /**
-   * 新增食材：双向包含查重后写入沙箱
+   * 新增食材：查重后写入沙箱，若重复弹出提示语并禁止添加
    */
   addIngredient() {
     const name = this.newIngredientName.trim();
+    if (name.length === 0) {
+      promptAction.showToast({ message: '请输入食材名称' });
+      return;
+    }
     const result: AddIngredientResult = this.state.addCustomIngredient(name);
     this.addIngredientMsg = result.message;
     this.addIngredientMsgIsError = !result.ok;
-    if (result.ok) {
-      this.newIngredientName = '';
-      this.buildIngredientMeta();
-      this.calculateMatches();
+    if (!result.ok) {
+      promptAction.showToast({
+        message: '当前食材内置库已存在',
+        duration: 2000
+      });
+      return;
     }
+    promptAction.showToast({
+      message: `已成功添加食材「${name}」`,
+      duration: 2000
+    });
+    this.newIngredientName = '';
+    this.buildIngredientMeta();
+    this.calculateMatches();
+  }
+
+  // 食材 Chip 标签：固定食材库只展示食材示例名称无需数量，我的冰箱展示库存数量
+  getIngredientChipLabel(name: string): string {
+    if (this.ingredientSource === 'repository') {
+      return name;
+    }
+    const item = this.state.inventory.find(i => i.name === name);
+    if (item && item.quantity > 0) {
+      return `${name} ×${item.quantity}${item.unit}`;
+    }
+    return name;
   }
 
   /**
@@ -475,7 +500,7 @@ export struct RecipeListPage {
             Flex({ wrap: FlexWrap.Wrap }) {
               ForEach(this.getDisplayedIngredients(), (name: string) => {
                 IngredientChip({
-                  label: `${name} ·${this.getIngredientCount(name)}`,
+                  label: this.getIngredientChipLabel(name),
                   isSelected: this.selectedIngredients.includes(name),
                   onChipClick: () => {
                     this.toggleIngredient(name);
@@ -557,11 +582,6 @@ export struct RecipeListPage {
                   .fontColor(this.addIngredientMsgIsError ? ColorConstants.COLOR_ERROR : ColorConstants.COLOR_SUCCESS)
                   .margin({ top: 6 })
               }
-
-              Text('食材名固定不可修改；新增时按「双向包含」查重（已有「米」则「米饭」不可再加）')
-                .fontSize(12)
-                .fontColor(ColorConstants.COLOR_BO)
-                .margin({ top: 6 })
             }
             .width('100%')
             .alignItems(HorizontalAlign.Start)

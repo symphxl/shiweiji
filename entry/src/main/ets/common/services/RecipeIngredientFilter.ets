@@ -92,12 +92,9 @@ export class RecipeIngredientFilter {
     }
     const conflict = RecipeIngredientFilter.findConflict(existing, target);
     if (conflict.length > 0) {
-      if (conflict === target) {
-        return { ok: false, message: `食材「${target}」已存在，无需重复添加`, conflictWith: conflict };
-      }
       return {
         ok: false,
-        message: `食材「${target}」与已有食材「${conflict}」存在包含关系，已判定为重复，不能添加`,
+        message: '当前食材内置库已存在',
         conflictWith: conflict
       };
     }
