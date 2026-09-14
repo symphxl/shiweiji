@@ -121,7 +121,7 @@ struct FridgePage {
     this.showAddDialog = false;
     this.newName = '';
     this.newQuantityStr = '1';
-    promptAction.showToast({ message: `🎉 ${name}（${qty}${unit}）已存入冰箱并持久化！` });
+    promptAction.showToast({ message: `🎉 ${name}（${qty}${unit}）已存入冰箱！` });
   }
 
   build() {
@@ -479,7 +479,7 @@ struct FridgePage {
             .width('100%')
             .margin({ bottom: 16 })
 
-            Button('确认存入冰箱（自动持久化到本地）')
+            Button('确认存入冰箱')
               .width('100%')
               .height(42)
               .backgroundColor(ColorConstants.COLOR_ZHU)

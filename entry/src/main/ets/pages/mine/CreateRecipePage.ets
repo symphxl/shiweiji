@@ -222,7 +222,7 @@ struct CreateRecipePage {
     this.state.addCustomRecipe(newRecipe);
     if (this.isEditMode) {
       promptAction.showToast({
-        message: this.isFamilyRecipe ? '🎉 菜谱已更新并设为唯一重点展出家传菜！' : '🎉 菜谱信息已更新并成功持久化！'
+        message: this.isFamilyRecipe ? '🎉 菜谱已更新并设为唯一重点展出家传菜！' : '🎉 菜谱信息已更新！'
       });
     } else {
       promptAction.showToast({

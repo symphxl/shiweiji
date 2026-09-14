@@ -133,7 +133,7 @@ export struct HomePage {
     this.showQuickAddDialog = false;
     this.quickAddName = '';
     this.quickAddQuantityStr = '1';
-    promptAction.showToast({ message: `🎉 ${name}（${qty}${unit}）已存入冰箱并持久化到本地！` });
+    promptAction.showToast({ message: `🎉 ${name}（${qty}${unit}）已存入冰箱！` });
   }
 
   private isSoupRecipe(recipe: RecipeItem): boolean {
@@ -793,7 +793,7 @@ export struct HomePage {
           .margin({ bottom: 14 })
 
           // 存入按钮
-          Button('确认存入冰箱（自动持久化到本地）')
+          Button('确认存入冰箱')
             .width('100%')
             .height(42)
             .backgroundColor(ColorConstants.COLOR_ZHU)
