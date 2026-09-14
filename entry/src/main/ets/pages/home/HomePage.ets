@@ -235,31 +235,8 @@ export struct HomePage {
       Scroll() {
       Column() {
         // ================= 首页抬头/眉头 Header（大图背景层叠区域） =================
-        Stack({ alignContent: Alignment.TopStart }) {
-          // 1. 底层大背景图（01_index.jpg）与底部羽化渐变
-          Stack({ alignContent: Alignment.Bottom }) {
-            Image($rawfile('image/01_index.jpg'))
-              .width('100%')
-              .height('100%')
-              .objectFit(ImageFit.Cover)
-
-            // 底部自然羽化过渡层，融入下方的宣纸底色
-            Column()
-              .width('100%')
-              .height(90)
-              .linearGradient({
-                angle: 180,
-                colors: [
-                  ['rgba(247, 243, 234, 0.0)', 0.0],
-                  ['rgba(247, 243, 234, 0.7)', 0.6],
-                  [ColorConstants.COLOR_XUAN, 1.0]
-                ]
-              })
-          }
-          .width('100%')
-          .height('100%')
-
-          // 2. 眉头前景内容区
+        Stack({ alignContent: Alignment.Bottom }) {
+          // 眉头前景内容区（背景图绑定于此，高度完全由内容紧凑决定，红色按钮下方不留多余空白）
           Column() {
             // 顶部搜索快捷栏
             Row() {
@@ -425,7 +402,24 @@ export struct HomePage {
             .padding({ left: 16, right: 16 })
           }
           .width('100%')
-          .padding({ bottom: 4 })
+          .backgroundImage($rawfile('image/01_index.jpg'), ImageRepeat.NoRepeat)
+          .backgroundImageSize(ImageSize.Cover)
+          .backgroundImagePosition(Alignment.Top)
+          .padding({ bottom: 12 })
+
+          // 底部自然羽化过渡层，融入下方的宣纸底色
+          Row()
+            .width('100%')
+            .height(36)
+            .linearGradient({
+              angle: 180,
+              colors: [
+                ['rgba(247, 243, 234, 0.0)', 0.0],
+                ['rgba(247, 243, 234, 0.75)', 0.6],
+                [ColorConstants.COLOR_XUAN, 1.0]
+              ]
+            })
+            .hitTestBehavior(HitTestMode.None)
         }
         .width('100%')
 
