@@ -20,6 +20,7 @@ struct RecipeDetailPage {
   @State recipe: RecipeItem | null = null;
   @State currentServings: number = 2;
   @State isCollected: boolean = false;
+  @StorageLink('recipeVersion') @Watch('onRecipeUpdated') recipeVersion: number = 0;
 
   aboutToAppear() {
     try {
@@ -38,6 +39,16 @@ struct RecipeDetailPage {
     if (this.recipe) {
       this.currentServings = this.recipe.servings;
       this.isCollected = this.state.isRecipeCollected(this.recipe.id);
+    }
+  }
+
+  onRecipeUpdated() {
+    if (this.recipe) {
+      const found = this.state.recipes.find(r => r.id === this.recipe!.id);
+      if (found) {
+        this.recipe = found;
+        this.isCollected = this.state.isRecipeCollected(found.id);
+      }
     }
   }
 
@@ -108,7 +119,7 @@ struct RecipeDetailPage {
                 .padding({ top: this.topSafeHeight })
                 .justifyContent(FlexAlign.Center)
 
-                // 顶部返回悬浮按钮
+                // 顶部返回与编辑悬浮按钮
                 Row() {
                   Button({ type: ButtonType.Circle }) {
                     Text('‹')
@@ -122,6 +133,24 @@ struct RecipeDetailPage {
                   .onClick(() => {
                     router.back();
                   })
+
+                  Blank()
+
+                  Button('✏️ 编辑菜谱')
+                    .height(34)
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(Color.White)
+                    .backgroundColor('rgba(0, 0, 0, 0.40)')
+                    .borderRadius(StyleConstants.RADIUS_PILL)
+                    .padding({ left: 12, right: 12 })
+                    .onClick(() => {
+                      if (this.recipe) {
+                        router.pushUrl({
+                          url: 'pages/mine/CreateRecipePage',
+                          params: { recipeId: this.recipe.id }
+                        });
+                      }
+                    })
                 }
                 .width('100%')
                 .padding({ left: 16, right: 16, top: this.topSafeHeight + 10 })

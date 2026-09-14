@@ -31,18 +31,53 @@ struct FridgePage {
   // 新增食材表单状态
   @State newName: string = '';
   @State newCategory: string = '蔬菜';
-  @State newQuantity: number = 1;
+  @State newQuantityStr: string = '1';
   @State newUnit: string = '个';
   @State newDays: number = 5;
   @State newStorage: string = '冷藏';
+  @State selectedExpiryDate: Date = new Date();
+  @State expiryDateText: string = '';
 
   readonly storageTabs: string[] = ['全部', '冷藏', '冷冻', '常温'];
+  readonly commonUnits: string[] = ['个', '斤', '两', '克', '千克', '袋', '盒', '块', '根', '瓶', '勺', '包', '把', '只', '片', 'mL'];
+
+  aboutToAppear() {
+    this.initDefaultExpiryDate(5);
+  }
+
+  initDefaultExpiryDate(days: number) {
+    const d = new Date(Date.now() + days * 86400000);
+    this.selectedExpiryDate = d;
+    this.newDays = days;
+    this.expiryDateText = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+  }
+
+  openDatePicker() {
+    DatePickerDialog.show({
+      start: new Date(),
+      end: new Date(new Date().getFullYear() + 3, 11, 31),
+      selected: this.selectedExpiryDate,
+      onAccept: (value: DatePickerResult) => {
+        if (value.year !== undefined && value.month !== undefined && value.day !== undefined) {
+          const picked = new Date(value.year, value.month, value.day);
+          this.selectedExpiryDate = picked;
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          picked.setHours(0, 0, 0, 0);
+          const diffDays = Math.max(0, Math.round((picked.getTime() - now.getTime()) / 86400000));
+          this.newDays = diffDays;
+          this.expiryDateText = `${picked.getFullYear()}-${(picked.getMonth() + 1).toString().padStart(2, '0')}-${picked.getDate().toString().padStart(2, '0')}`;
+        }
+      }
+    });
+  }
 
   getFilteredInventory(): InventoryItem[] {
+    const valid = this.state.inventory.filter(item => item.quantity > 0);
     if (this.activeStorageFilter === '全部') {
-      return this.state.inventory;
+      return valid;
     }
-    return this.state.inventory.filter(item => item.storageType === this.activeStorageFilter);
+    return valid.filter(item => item.storageType === this.activeStorageFilter);
   }
 
   getExpiredItems(): InventoryItem[] {
@@ -64,21 +99,29 @@ struct FridgePage {
   }
 
   saveNewItem() {
-    if (this.newName.trim().length === 0) {
+    const name = this.newName.trim();
+    if (name.length === 0) {
       promptAction.showToast({ message: '请输入食材名称' });
       return;
     }
+    const qty = parseFloat(this.newQuantityStr);
+    if (isNaN(qty) || qty <= 0) {
+      promptAction.showToast({ message: '数量必须为大于0的正数（支持小数，如 0.5、2）' });
+      return;
+    }
+    const unit = (this.newUnit && this.newUnit.trim().length > 0) ? this.newUnit.trim() : '个';
     this.state.addInventoryItem(
-      this.newName.trim(),
+      name,
       this.newCategory,
-      this.newQuantity,
-      this.newUnit,
+      qty,
+      unit,
       this.newDays,
       this.newStorage
     );
     this.showAddDialog = false;
     this.newName = '';
-    promptAction.showToast({ message: '已成功存入冰箱' });
+    this.newQuantityStr = '1';
+    promptAction.showToast({ message: `🎉 ${name}（${qty}${unit}）已存入冰箱并持久化！` });
   }
 
   build() {
@@ -226,14 +269,19 @@ struct FridgePage {
                     .height(28)
                     .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
                     .onClick(() => {
-                      this.state.updateInventoryQuantity(item.id, -1);
+                      const step = (item.quantity > 0 && item.quantity < 1) ? item.quantity : 1;
+                      const willBeZero = (item.quantity - step) <= 0;
+                      this.state.updateInventoryQuantity(item.id, -step);
+                      if (willBeZero) {
+                        promptAction.showToast({ message: `「${item.name}」数量已减至0，已从冰箱中移除` });
+                      }
                     })
 
                     Text(`${item.quantity} ${item.unit}`)
                       .fontSize(StyleConstants.FONT_BODY_SM)
                       .fontWeight(FontWeight.Bold)
                       .fontColor(ColorConstants.COLOR_INK)
-                      .width(48)
+                      .width(56)
                       .textAlign(TextAlign.Center)
 
                     Button({ type: ButtonType.Circle }) {
@@ -346,34 +394,109 @@ struct FridgePage {
             .width('100%')
             .margin({ bottom: 12 })
 
+            // 数量录入（只允许正数包含小数）与单位录入
+            Row() {
+              Text('食材数量：')
+                .fontSize(StyleConstants.FONT_CAPTION)
+                .fontColor(ColorConstants.COLOR_SUMI)
+
+              TextInput({
+                placeholder: '数量（正数，如 1 或 0.5）',
+                text: this.newQuantityStr
+              })
+                .layoutWeight(1)
+                .height(38)
+                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                .borderRadius(StyleConstants.RADIUS_SM)
+                .margin({ right: 8 })
+                .onChange((v: string) => {
+                  let clean = v.replace(/[^0-9.]/g, '');
+                  const parts = clean.split('.');
+                  if (parts.length > 2) {
+                    clean = parts[0] + '.' + parts.slice(1).join('');
+                  }
+                  this.newQuantityStr = clean;
+                })
+
+              TextInput({
+                placeholder: '单位',
+                text: this.newUnit
+              })
+                .width(80)
+                .height(38)
+                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                .borderRadius(StyleConstants.RADIUS_SM)
+                .onChange((v: string) => {
+                  this.newUnit = v;
+                })
+            }
+            .width('100%')
+            .margin({ bottom: 8 })
+
+            // 常用单位点选
+            Row() {
+              Text('常用单位：')
+                .fontSize(StyleConstants.FONT_CAPTION)
+                .fontColor(ColorConstants.COLOR_SUMI)
+
+              Scroll() {
+                Row() {
+                  ForEach(this.commonUnits, (u: string) => {
+                    Text(u)
+                      .fontSize(12)
+                      .fontColor(this.newUnit === u ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
+                      .backgroundColor(this.newUnit === u ? 'rgba(158, 43, 37, 0.12)' : ColorConstants.COLOR_SHENGCHENG)
+                      .borderRadius(StyleConstants.RADIUS_SM)
+                      .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                      .margin({ right: 6 })
+                      .onClick(() => {
+                        this.newUnit = u;
+                      })
+                  }, (u: string) => u)
+                }
+              }
+              .scrollable(ScrollDirection.Horizontal)
+              .scrollBar(BarState.Off)
+              .layoutWeight(1)
+            }
+            .width('100%')
+            .margin({ bottom: 12 })
+
+            // 预计保质期（时间选择器）
             Row() {
               Text('预计保质期：')
                 .fontSize(StyleConstants.FONT_CAPTION)
                 .fontColor(ColorConstants.COLOR_SUMI)
 
-              Slider({
-                value: this.newDays,
-                min: 1,
-                max: 30,
-                step: 1
-              })
-                .layoutWeight(1)
-                .selectedColor(ColorConstants.COLOR_ZHU)
-                .onChange((v: number) => {
-                  this.newDays = Math.round(v);
-                })
+              Row() {
+                Text(`📅 ${this.expiryDateText}（剩 ${this.newDays} 天）`)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(ColorConstants.COLOR_ZHU)
 
-              Text(`${this.newDays} 天`)
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(ColorConstants.COLOR_ZHU)
-                .width(44)
-                .textAlign(TextAlign.End)
+                Blank()
+
+                Text('点击设置日期 ›')
+                  .fontSize(StyleConstants.FONT_BADGE)
+                  .fontColor(ColorConstants.COLOR_CHA)
+              }
+              .layoutWeight(1)
+              .height(38)
+              .padding({ left: 10, right: 10 })
+              .backgroundColor('rgba(158, 43, 37, 0.08)')
+              .borderRadius(StyleConstants.RADIUS_SM)
+              .border({
+                width: 1,
+                color: 'rgba(158, 43, 37, 0.25)'
+              })
+              .onClick(() => {
+                this.openDatePicker();
+              })
             }
             .width('100%')
             .margin({ bottom: 16 })
 
-            Button('确认存入冰箱')
+            Button('确认存入冰箱（自动持久化到本地）')
               .width('100%')
               .height(42)
               .backgroundColor(ColorConstants.COLOR_ZHU)

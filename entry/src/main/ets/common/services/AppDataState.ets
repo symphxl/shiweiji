@@ -92,7 +92,14 @@ export class AppDataState {
   updateInventoryQuantity(id: string, delta: number): void {
     const item = this.inventory.find(it => it.id === id);
     if (item) {
-      item.quantity = Math.max(0, item.quantity + delta);
+      const newQty = Math.round((item.quantity + delta) * 100) / 100;
+      if (newQty <= 0) {
+        // 当食材数量减至0或更少时，从我的冰箱中去除
+        this.inventory = this.inventory.filter(it => it.id !== id);
+      } else {
+        item.quantity = newQty;
+      }
+      this.userProfile.fridgeItemCount = this.inventory.length;
       this.persistInventory();
     }
   }
@@ -102,23 +109,24 @@ export class AppDataState {
     if (!trimmedName) {
       return;
     }
+    const validQty = (typeof quantity === 'number' && !isNaN(quantity) && quantity > 0) ? Math.round(quantity * 100) / 100 : 1;
     const exist = this.inventory.find(it => it.name === trimmedName && it.storageType === storage);
     if (exist) {
-      exist.quantity += (quantity > 0 ? quantity : 1);
+      exist.quantity = Math.round((exist.quantity + validQty) * 100) / 100;
       exist.daysRemaining = days > 0 ? days : exist.daysRemaining;
       if (category) {
         exist.category = category;
       }
-      if (unit) {
-        exist.unit = unit;
+      if (unit && unit.trim().length > 0) {
+        exist.unit = unit.trim();
       }
     } else {
       const newItem: InventoryItem = {
         id: 'inv_' + Date.now(),
         name: trimmedName,
         category: category || '蔬菜',
-        quantity: quantity > 0 ? quantity : 1,
-        unit: unit || '个',
+        quantity: validQty,
+        unit: (unit && unit.trim().length > 0) ? unit.trim() : '个',
         daysRemaining: days > 0 ? days : 5,
         storageType: storage || '冷藏'
       };
@@ -350,6 +358,21 @@ export class AppDataState {
   // ================= 自创与家常菜谱 =================
   addCustomRecipe(recipe: RecipeItem): void {
     recipe.isFamilyRecipe = !!recipe.isFamilyRecipe;
+
+    if (recipe.isFamilyRecipe) {
+      // 保证重点展出的家传菜永远只有一个，其他任何菜谱自动取消重点展出
+      this.customRecipes.forEach(r => {
+        if (r.id !== recipe.id) {
+          r.isFamilyRecipe = false;
+        }
+      });
+      this.recipes.forEach(r => {
+        if (r.id !== recipe.id) {
+          r.isFamilyRecipe = false;
+        }
+      });
+    }
+
     const existIdx = this.customRecipes.findIndex(r => r.id === recipe.id);
     if (existIdx >= 0) {
       this.customRecipes[existIdx] = recipe;
@@ -390,10 +413,23 @@ export class AppDataState {
       const saved = RecipeStore.restore(context);
       if (saved && saved.length > 0) {
         this.customRecipes = saved;
-        this.customRecipes.forEach(r => {
-          r.isFamilyRecipe = r.isFamilyRecipe === true;
-        });
+        // 保证重点展出的家传菜永远只有一个
+        let hasFamily = false;
+        for (let i = 0; i < this.customRecipes.length; i++) {
+          if (this.customRecipes[i].isFamilyRecipe) {
+            if (!hasFamily) {
+              hasFamily = true;
+            } else {
+              this.customRecipes[i].isFamilyRecipe = false;
+            }
+          }
+        }
         const savedIds = new Set(saved.map(r => r.id));
+        if (hasFamily) {
+          this.recipes.forEach(r => {
+            r.isFamilyRecipe = false;
+          });
+        }
         this.recipes = this.customRecipes.concat(this.recipes.filter(r => !savedIds.has(r.id)));
         const familyCount = this.recipes.filter(r => r.isFamilyRecipe).length;
         this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
@@ -428,9 +464,9 @@ export class AppDataState {
     try {
       const saved = InventoryStore.restore(context);
       if (saved !== null && Array.isArray(saved)) {
-        this.inventory = saved;
+        this.inventory = saved.filter(item => item.quantity > 0);
       } else {
-        this.inventory = MockDataService.getInitialInventory();
+        this.inventory = MockDataService.getInitialInventory().filter(item => item.quantity > 0);
         InventoryStore.save(context, this.inventory);
       }
       this.userProfile.fridgeItemCount = this.inventory.length;
@@ -467,7 +503,7 @@ export class AppDataState {
     tastePreferences: string[],
     avatarImage?: string
   ): void {
-    const familyCount = this.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_')).length;
+    const familyCount = this.recipes.filter(r => r.isFamilyRecipe).length;
     this.userProfile = {
       id: this.userProfile.id,
       nickname: nickname,

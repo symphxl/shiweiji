@@ -460,9 +460,32 @@ export struct MinePage {
                 .layoutWeight(1)
                 .alignItems(HorizontalAlign.Start)
 
-                Text('查看 ›')
-                  .fontSize(StyleConstants.FONT_CAPTION)
-                  .fontColor(ColorConstants.COLOR_ZHU)
+                Row() {
+                  Button('✏️ 编辑')
+                    .height(30)
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_ZHU)
+                    .backgroundColor('rgba(158, 43, 37, 0.08)')
+                    .borderRadius(StyleConstants.RADIUS_SM)
+                    .padding({ left: 8, right: 8 })
+                    .margin({ right: 6 })
+                    .onClick(() => {
+                      router.pushUrl({
+                        url: 'pages/mine/CreateRecipePage',
+                        params: { recipeId: rec.id }
+                      });
+                    })
+
+                  Text('查看 ›')
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_BO)
+                    .onClick(() => {
+                      router.pushUrl({
+                        url: 'pages/recipe/RecipeDetailPage',
+                        params: { recipeId: rec.id }
+                      });
+                    })
+                }
               }
               .width('100%')
               .padding(StyleConstants.SPACE_MD)
@@ -479,7 +502,7 @@ export struct MinePage {
                   params: { recipeId: rec.id }
                 });
               })
-            }, (rec: RecipeItem) => rec.id)
+            }, (rec: RecipeItem) => `${rec.id}_${rec.isFamilyRecipe ? 'family' : 'normal'}_${this.recipeVersion}`)
           }
         }
         .width('100%')

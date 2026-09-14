@@ -54,6 +54,65 @@ struct CreateRecipePage {
     { id: 'step_init_1', desc: '' }
   ];
 
+  // 编辑模式状态
+  @State isEditMode: boolean = false;
+  @State targetRecipeId: string = '';
+
+  aboutToAppear() {
+    try {
+      const params = router.getParams() as Record<string, Object>;
+      if (params && params['recipeId']) {
+        const id = params['recipeId'] as string;
+        this.targetRecipeId = id;
+        this.isEditMode = true;
+        this.loadRecipeForEdit(id);
+      }
+    } catch (e) {
+      // 忽略路由参数解析异常
+    }
+  }
+
+  loadRecipeForEdit(id: string) {
+    const target = this.state.recipes.find(r => r.id === id);
+    if (!target) {
+      return;
+    }
+    this.recipeName = target.name;
+    this.region = target.region || '家庭自创 · 温暖烟火';
+    this.difficulty = target.difficulty || '简单';
+    this.cookTimeMin = target.cookTimeMin || 0;
+    this.calories = target.calories || 200;
+    this.isFamilyRecipe = !!target.isFamilyRecipe;
+    this.story = target.story || '';
+
+    // 回填食材列表
+    if (target.ingredients && target.ingredients.length > 0) {
+      this.ingredientsList = target.ingredients.map((ing, idx) => {
+        let amountStr = '';
+        if (ing.unit && ing.unit !== '适量') {
+          amountStr = (ing.baseAmount > 0 && ing.baseAmount !== 1) ? `${ing.baseAmount} ${ing.unit}` : ing.unit;
+        } else if (ing.baseAmount > 0) {
+          amountStr = `${ing.baseAmount}`;
+        }
+        return {
+          id: `ing_edit_${idx}_${Date.now()}`,
+          name: ing.name,
+          amount: amountStr
+        } as DynamicIngredient;
+      });
+    }
+
+    // 回填步骤列表
+    if (target.steps && target.steps.length > 0) {
+      this.stepsList = target.steps.map((st, idx) => {
+        return {
+          id: `step_edit_${idx}_${Date.now()}`,
+          desc: st.description
+        } as DynamicStep;
+      });
+    }
+  }
+
   addIngredientRow() {
     this.ingredientsList.push({
       id: `ing_${Date.now()}_${this.ingredientsList.length}`,
@@ -128,8 +187,9 @@ struct CreateRecipePage {
       });
     });
 
+    const finalId = this.isEditMode ? this.targetRecipeId : ('rec_custom_' + Date.now());
     const newRecipe: RecipeItem = {
-      id: 'rec_custom_' + Date.now(),
+      id: finalId,
       name: finalName,
       coverGradient: this.isFamilyRecipe ? ['#9E2B25', '#C89B3C'] : ['#B85C38', '#7C3A21'],
       emoji: this.isFamilyRecipe ? '🏮' : '🥘',
@@ -154,9 +214,15 @@ struct CreateRecipePage {
     } catch (e) {}
 
     this.state.addCustomRecipe(newRecipe);
-    promptAction.showToast({
-      message: this.isFamilyRecipe ? '🎉 家传菜谱已保存并在列表中置顶！' : '🎉 家常菜谱已成功保存到本地！'
-    });
+    if (this.isEditMode) {
+      promptAction.showToast({
+        message: this.isFamilyRecipe ? '🎉 菜谱已更新并设为唯一重点展出家传菜！' : '🎉 菜谱信息已更新并成功持久化！'
+      });
+    } else {
+      promptAction.showToast({
+        message: this.isFamilyRecipe ? '🎉 家传菜谱已保存并在列表中置顶！' : '🎉 家常菜谱已成功保存到本地！'
+      });
+    }
     setTimeout(() => {
       router.back();
     }, 500);
@@ -165,7 +231,7 @@ struct CreateRecipePage {
   build() {
     Column() {
       ShiWeiNavBar({
-        title: '添加家常菜 · 记录味道',
+        title: this.isEditMode ? '编辑家常菜谱' : '添加家常菜 · 记录味道',
         rightText: '保存',
         onBackClick: () => {
           router.back();
@@ -237,9 +303,9 @@ struct CreateRecipePage {
                   .fontWeight(FontWeight.Bold)
                   .fontColor(this.isFamilyRecipe ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_INK)
 
-                Text(this.isFamilyRecipe ? '★ 已开启：将在我的家常菜列表中置顶并重点突出' : '未开启：作为普通家常菜展示')
+                Text(this.isFamilyRecipe ? '★ 设为唯一重点展出家传菜（置顶展出，原有重点展出的菜谱将自动取消）' : '未开启：作为普通家常菜展示（重点展出永远保持唯一）')
                   .fontSize(StyleConstants.FONT_BADGE)
-                  .fontColor(ColorConstants.COLOR_BO)
+                  .fontColor(this.isFamilyRecipe ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
                   .margin({ top: 2 })
               }
               .alignItems(HorizontalAlign.Start)

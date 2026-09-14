@@ -31,17 +31,48 @@ export struct HomePage {
   @State showQuickAddDialog: boolean = false;
   @State quickAddName: string = '';
   @State quickAddCategory: string = '蔬菜';
-  @State quickAddQuantity: number = 1;
+  @State quickAddQuantityStr: string = '1';
   @State quickAddUnit: string = '个';
   @State quickAddDays: number = 5;
   @State quickAddStorage: string = '冷藏';
+  @State quickSelectedExpiryDate: Date = new Date();
+  @State quickExpiryDateText: string = '';
 
   readonly quickPresetIngredients: string[] = ['土豆', '牛肉', '五花肉', '青椒', '鸡蛋', '番茄', '豆腐', '黄瓜'];
   readonly storageOptions: string[] = ['冷藏', '冷冻', '常温'];
+  readonly quickCommonUnits: string[] = ['个', '斤', '两', '克', '千克', '袋', '盒', '块', '根', '瓶', '勺', '包', '把', '只', '片', 'mL'];
 
   aboutToAppear() {
     this.updateUserGreeting();
     this.refreshTodayRecipes();
+    this.initDefaultQuickExpiryDate(5);
+  }
+
+  initDefaultQuickExpiryDate(days: number) {
+    const d = new Date(Date.now() + days * 86400000);
+    this.quickSelectedExpiryDate = d;
+    this.quickAddDays = days;
+    this.quickExpiryDateText = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+  }
+
+  openQuickDatePicker() {
+    DatePickerDialog.show({
+      start: new Date(),
+      end: new Date(new Date().getFullYear() + 3, 11, 31),
+      selected: this.quickSelectedExpiryDate,
+      onAccept: (value: DatePickerResult) => {
+        if (value.year !== undefined && value.month !== undefined && value.day !== undefined) {
+          const picked = new Date(value.year, value.month, value.day);
+          this.quickSelectedExpiryDate = picked;
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          picked.setHours(0, 0, 0, 0);
+          const diffDays = Math.max(0, Math.round((picked.getTime() - now.getTime()) / 86400000));
+          this.quickAddDays = diffDays;
+          this.quickExpiryDateText = `${picked.getFullYear()}-${(picked.getMonth() + 1).toString().padStart(2, '0')}-${picked.getDate().toString().padStart(2, '0')}`;
+        }
+      }
+    });
   }
 
   onProfileChanged() {
@@ -74,6 +105,12 @@ export struct HomePage {
       promptAction.showToast({ message: '请输入食材名称' });
       return;
     }
+    const qty = parseFloat(this.quickAddQuantityStr);
+    if (isNaN(qty) || qty <= 0) {
+      promptAction.showToast({ message: '数量必须为大于0的正数（支持小数，如 0.5、2）' });
+      return;
+    }
+    const unit = (this.quickAddUnit && this.quickAddUnit.trim().length > 0) ? this.quickAddUnit.trim() : '个';
     let category = this.quickAddCategory;
     if (['牛肉', '羊肉', '鸡肉', '五花肉', '排骨', '鸡翅', '腊肠', '里脊'].some(m => name.includes(m))) {
       category = '肉禽';
@@ -88,15 +125,15 @@ export struct HomePage {
     this.state.addInventoryItem(
       name,
       category,
-      this.quickAddQuantity,
-      this.quickAddUnit,
+      qty,
+      unit,
       this.quickAddDays,
       this.quickAddStorage
     );
     this.showQuickAddDialog = false;
     this.quickAddName = '';
-    this.quickAddQuantity = 1;
-    promptAction.showToast({ message: `🎉 ${name}已成功存入冰箱并持久化到本地！` });
+    this.quickAddQuantityStr = '1';
+    promptAction.showToast({ message: `🎉 ${name}（${qty}${unit}）已存入冰箱并持久化到本地！` });
   }
 
   private isSoupRecipe(recipe: RecipeItem): boolean {
@@ -345,8 +382,8 @@ export struct HomePage {
           // 冰箱食材胶囊条
           Column() {
             Flex({ wrap: FlexWrap.Wrap }) {
-              ForEach(this.state.inventory.slice(0, 6), (item: InventoryItem) => {
-                Text(`${item.name}×${item.quantity}`)
+              ForEach(this.state.inventory.filter(item => item.quantity > 0).slice(0, 8), (item: InventoryItem) => {
+                Text(`${item.name}×${item.quantity}${item.unit ? item.unit : ''}`)
                   .fontSize(StyleConstants.FONT_CAPTION)
                   .fontColor(ColorConstants.COLOR_ZHU)
                   .fontWeight(FontWeight.Medium)
@@ -653,58 +690,104 @@ export struct HomePage {
           .width('100%')
           .margin({ bottom: 10 })
 
-          // 数量与单位
+          // 数量与单位录入
           Row() {
-            Text('数量：')
+            Text('食材数量：')
               .fontSize(StyleConstants.FONT_CAPTION)
               .fontColor(ColorConstants.COLOR_SUMI)
 
-            Text('－')
-              .fontSize(16)
-              .fontColor(ColorConstants.COLOR_INK)
+            TextInput({
+              placeholder: '数量（正数，如 1 或 0.5）',
+              text: this.quickAddQuantityStr
+            })
+              .layoutWeight(1)
+              .height(38)
               .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
               .borderRadius(StyleConstants.RADIUS_SM)
-              .padding({ left: 10, right: 10, top: 2, bottom: 2 })
-              .onClick(() => {
-                if (this.quickAddQuantity > 1) {
-                  this.quickAddQuantity--;
+              .margin({ right: 8 })
+              .onChange((v: string) => {
+                let clean = v.replace(/[^0-9.]/g, '');
+                const parts = clean.split('.');
+                if (parts.length > 2) {
+                  clean = parts[0] + '.' + parts.slice(1).join('');
                 }
+                this.quickAddQuantityStr = clean;
               })
 
-            Text(`${this.quickAddQuantity}`)
-              .fontSize(StyleConstants.FONT_BODY)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(ColorConstants.COLOR_INK)
-              .margin({ left: 10, right: 10 })
-
-            Text('＋')
-              .fontSize(16)
-              .fontColor(ColorConstants.COLOR_INK)
+            TextInput({
+              placeholder: '单位',
+              text: this.quickAddUnit
+            })
+              .width(80)
+              .height(38)
               .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
               .borderRadius(StyleConstants.RADIUS_SM)
-              .padding({ left: 10, right: 10, top: 2, bottom: 2 })
-              .onClick(() => {
-                this.quickAddQuantity++;
+              .onChange((v: string) => {
+                this.quickAddUnit = v;
               })
+          }
+          .width('100%')
+          .margin({ bottom: 8 })
 
-            Blank()
-
-            Text('保质期：')
+          // 常用单位点选
+          Row() {
+            Text('常用单位：')
               .fontSize(StyleConstants.FONT_CAPTION)
               .fontColor(ColorConstants.COLOR_SUMI)
 
-            ForEach([3, 5, 7, 15], (d: number) => {
-              Text(`${d}天`)
+            Scroll() {
+              Row() {
+                ForEach(this.quickCommonUnits, (u: string) => {
+                  Text(u)
+                    .fontSize(12)
+                    .fontColor(this.quickAddUnit === u ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
+                    .backgroundColor(this.quickAddUnit === u ? 'rgba(158, 43, 37, 0.12)' : ColorConstants.COLOR_SHENGCHENG)
+                    .borderRadius(StyleConstants.RADIUS_SM)
+                    .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                    .margin({ right: 6 })
+                    .onClick(() => {
+                      this.quickAddUnit = u;
+                    })
+                }, (u: string) => u)
+              }
+            }
+            .scrollable(ScrollDirection.Horizontal)
+            .scrollBar(BarState.Off)
+            .layoutWeight(1)
+          }
+          .width('100%')
+          .margin({ bottom: 10 })
+
+          // 预计保质期（时间选择器）
+          Row() {
+            Text('预计保质期：')
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontColor(ColorConstants.COLOR_SUMI)
+
+            Row() {
+              Text(`📅 ${this.quickExpiryDateText}（剩 ${this.quickAddDays} 天）`)
                 .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(this.quickAddDays === d ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
-                .backgroundColor(this.quickAddDays === d ? 'rgba(158, 43, 37, 0.12)' : ColorConstants.COLOR_SHENGCHENG)
-                .borderRadius(StyleConstants.RADIUS_SM)
-                .padding({ left: 6, right: 6, top: 4, bottom: 4 })
-                .margin({ left: 4 })
-                .onClick(() => {
-                  this.quickAddDays = d;
-                })
-            }, (d: number) => d.toString())
+                .fontWeight(FontWeight.Bold)
+                .fontColor(ColorConstants.COLOR_ZHU)
+
+              Blank()
+
+              Text('点击设置日期 ›')
+                .fontSize(StyleConstants.FONT_BADGE)
+                .fontColor(ColorConstants.COLOR_CHA)
+            }
+            .layoutWeight(1)
+            .height(38)
+            .padding({ left: 10, right: 10 })
+            .backgroundColor('rgba(158, 43, 37, 0.08)')
+            .borderRadius(StyleConstants.RADIUS_SM)
+            .border({
+              width: 1,
+              color: 'rgba(158, 43, 37, 0.25)'
+            })
+            .onClick(() => {
+              this.openQuickDatePicker();
+            })
           }
           .width('100%')
           .margin({ bottom: 14 })
