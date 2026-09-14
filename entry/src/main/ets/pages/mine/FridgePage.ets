@@ -311,14 +311,20 @@ struct FridgePage {
             .margin({ bottom: 80 })
           }
           .width('100%')
+          .justifyContent(FlexAlign.Start)
+          .alignItems(HorizontalAlign.Start)
           .padding(StyleConstants.SPACE_MD)
         }
         .scrollBar(BarState.Off)
         .edgeEffect(EdgeEffect.Spring)
+        .width('100%')
         .layoutWeight(1)
+        .align(Alignment.Top)
       }
       .width('100%')
       .height('100%')
+      .justifyContent(FlexAlign.Start)
+      .alignItems(HorizontalAlign.Start)
       .backgroundColor(ColorConstants.COLOR_XUAN)
 
       // 底部浮动「清空冰箱配菜」按钮

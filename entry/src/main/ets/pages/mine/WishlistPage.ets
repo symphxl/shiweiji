@@ -193,14 +193,19 @@ struct WishlistPage {
             }, (rec: RecipeItem) => rec.id)
           }
           .width('100%')
+          .justifyContent(FlexAlign.Start)
+          .alignItems(HorizontalAlign.Start)
           .padding(StyleConstants.SPACE_MD)
         }
         .scrollBar(BarState.Off)
+        .width('100%')
         .layoutWeight(1)
+        .align(Alignment.Top)
       }
     }
     .width('100%')
     .height('100%')
+    .justifyContent(FlexAlign.Start)
     .backgroundColor(ColorConstants.COLOR_XUAN)
   }
 }

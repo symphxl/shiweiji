@@ -363,7 +363,7 @@ struct EditProfilePage {
           })
           .margin({ bottom: 20 })
 
-          Button('确认保存资料（本地持久化）')
+          Button('确认保存资料')
             .width('100%')
             .height(44)
             .backgroundColor(ColorConstants.COLOR_ZHU)
