@@ -8,104 +8,158 @@ import { RecipeItem, RecipeIngredient, CookingStepItem } from '../../common/mode
 import { ShiWeiNavBar } from '../../components/common/ShiWeiNavBar';
 
 /**
- * 拾味记 · 创建个人/家传菜谱 (Create Recipe)
- * 遵循设计文档 Chapter 13.1 (P29) 独有「这道菜的故事」字段
+ * 动态食材/调料输入条目
+ */
+interface DynamicIngredient {
+  id: string;
+  name: string;
+  amount: string;
+}
+
+/**
+ * 动态步骤输入条目
+ */
+interface DynamicStep {
+  id: string;
+  desc: string;
+}
+
+/**
+ * 拾味记 · 创建个人/家常/家传菜谱 (Create Recipe)
  */
 @Entry
 @Component
 struct CreateRecipePage {
   @State private state: AppDataState = AppDataState.getInstance();
 
-  @State recipeName: string = '外婆的小葱拌豆腐';
+  // 1. 菜谱名称输入框置空
+  @State recipeName: string = '';
   @State region: string = '家庭自创 · 温暖烟火';
   @State difficulty: string = '简单';
-  @State cookTimeMin: number = 20;
-  @State calories: number = 260;
-  @State isFamilyRecipe: boolean = true;
-  @State story: string = '小时候每到盛夏，外婆总会做上一盘小葱拌豆腐，点几滴纯香油，清凉爽口，是留在记忆深处最温暖的家的味道。';
+  // 2. 烹饪时长置 0
+  @State cookTimeMin: number = 0;
+  @State calories: number = 200;
+  // 5. 设为「家传菜」（在个人主页重点展出），默认为 false
+  @State isFamilyRecipe: boolean = false;
+  // 这道菜的故事置空
+  @State story: string = '';
 
-  // 动态食材
-  @State ingredient1Name: string = '老豆腐';
-  @State ingredient1Amount: string = '1 块';
-  @State ingredient2Name: string = '小葱';
-  @State ingredient2Amount: string = '2 根';
+  // 3. 食材用量输入框置空，初始默认只有一行输入框（包含食材调料输入框与数量输入框）
+  @State ingredientsList: DynamicIngredient[] = [
+    { id: 'ing_init_1', name: '', amount: '' }
+  ];
 
-  // 动态步骤
-  @State step1Title: string = '切块备料';
-  @State step1Desc: string = '老豆腐切成方丁入沸水焯烫1分钟捞出沥干，小葱洗净切花。';
-  @State step2Title: string = '调味拌匀';
-  @State step2Desc: string = '豆腐丁入碗，撒葱花，淋香油、生抽、适量精盐轻拌均匀。';
+  // 4. 关键步骤输入框置空，初始默认步骤一，每一个步骤描述/说明由用户输入
+  @State stepsList: DynamicStep[] = [
+    { id: 'step_init_1', desc: '' }
+  ];
+
+  addIngredientRow() {
+    this.ingredientsList.push({
+      id: `ing_${Date.now()}_${this.ingredientsList.length}`,
+      name: '',
+      amount: ''
+    });
+  }
+
+  removeIngredientRow(index: number) {
+    if (this.ingredientsList.length > 1) {
+      this.ingredientsList.splice(index, 1);
+    }
+  }
+
+  addStepRow() {
+    this.stepsList.push({
+      id: `step_${Date.now()}_${this.stepsList.length}`,
+      desc: ''
+    });
+  }
+
+  removeStepRow(index: number) {
+    if (this.stepsList.length > 1) {
+      this.stepsList.splice(index, 1);
+    }
+  }
 
   submitRecipe() {
-    let finalName = this.recipeName.trim();
+    const finalName = this.recipeName.trim();
     if (finalName.length === 0) {
-      finalName = '外婆的小葱拌豆腐';
+      promptAction.showToast({ message: '请输入菜谱名称' });
+      return;
     }
+
+    // 过滤与组装有效食材
+    const validIngredients: RecipeIngredient[] = [];
+    this.ingredientsList.forEach((item, idx) => {
+      const n = item.name.trim();
+      const a = item.amount.trim();
+      if (n.length > 0) {
+        validIngredients.push({
+          id: `c_ing_${idx + 1}`,
+          name: n,
+          baseAmount: 1,
+          unit: a.length > 0 ? a : '适量',
+          isRequired: idx === 0
+        });
+      }
+    });
+
+    if (validIngredients.length === 0) {
+      validIngredients.push({
+        id: 'c_ing_default',
+        name: finalName,
+        baseAmount: 1,
+        unit: '主料',
+        isRequired: true
+      });
+    }
+
+    // 组装步骤
+    const validSteps: CookingStepItem[] = [];
+    this.stepsList.forEach((s, idx) => {
+      const d = s.desc.trim();
+      validSteps.push({
+        stepNumber: idx + 1,
+        title: `步骤 ${idx + 1}`,
+        description: d.length > 0 ? d : `步骤 ${idx + 1}：细致烹饪，调味均匀。`,
+        heatLevel: '中火',
+        durationSec: 60,
+        tip: '留心火候，保持家常美味。'
+      });
+    });
 
     const newRecipe: RecipeItem = {
       id: 'rec_custom_' + Date.now(),
       name: finalName,
-      coverGradient: ['#B85C38', '#7C3A21'],
-      emoji: '🥘',
+      coverGradient: this.isFamilyRecipe ? ['#9E2B25', '#C89B3C'] : ['#B85C38', '#7C3A21'],
+      emoji: this.isFamilyRecipe ? '🏮' : '🥘',
       region: this.region,
       difficulty: this.difficulty,
       cookTimeMin: this.cookTimeMin,
       servings: 2,
-      calories: this.calories,
-      tags: ['自创菜', '家常菜', this.isFamilyRecipe ? '家传菜' : '家常小炒'],
+      calories: this.calories > 0 ? this.calories : 220,
+      tags: ['家常菜', this.isFamilyRecipe ? '家传菜' : '自创菜'],
       story: this.story.trim().length > 0 ? this.story.trim() : '「好好吃饭，用心记录属于自己的厨房时光。」',
       storyAuthor: this.state.userProfile.nickname,
-      ingredients: [
-        {
-          id: 'c_ing_1',
-          name: this.ingredient1Name.trim().length > 0 ? this.ingredient1Name.trim() : '主要食材',
-          baseAmount: 1,
-          unit: this.ingredient1Amount,
-          isRequired: true
-        },
-        {
-          id: 'c_ing_2',
-          name: this.ingredient2Name.trim().length > 0 ? this.ingredient2Name.trim() : '辅料',
-          baseAmount: 1,
-          unit: this.ingredient2Amount,
-          isRequired: false
-        }
-      ],
-      steps: [
-        {
-          stepNumber: 1,
-          title: this.step1Title,
-          description: this.step1Desc,
-          heatLevel: '准备',
-          durationSec: 0,
-          tip: '细致备料是美味的开端。'
-        },
-        {
-          stepNumber: 2,
-          title: this.step2Title,
-          description: this.step2Desc,
-          heatLevel: '中火',
-          durationSec: 180,
-          tip: '注意火候，留住本味。'
-        }
-      ],
+      ingredients: validIngredients,
+      steps: validSteps,
       requiredCookware: ['炒锅'],
-      isFamilyRecipe: true,
+      isFamilyRecipe: this.isFamilyRecipe,
       likeCount: 0,
       collectCount: 0
     };
 
     try {
       this.state.setContext(getContext(this) as common.Context);
-    } catch (e) {
-      // 忽略
-    }
+    } catch (e) {}
 
     this.state.addCustomRecipe(newRecipe);
-    promptAction.showToast({ message: '🎉 家常菜谱已成功保存并收录到本地！' });
+    promptAction.showToast({
+      message: this.isFamilyRecipe ? '🎉 家传菜谱已保存并在列表中置顶！' : '🎉 家常菜谱已成功保存到本地！'
+    });
     setTimeout(() => {
       router.back();
-    }, 600);
+    }, 500);
   }
 
   build() {
@@ -123,14 +177,14 @@ struct CreateRecipePage {
 
       Scroll() {
         Column() {
-          // 菜名
+          // 1. 菜谱名称（输入框初始置空）
           Column() {
             Text('菜谱名称')
               .fontSize(StyleConstants.FONT_CAPTION)
               .fontColor(ColorConstants.COLOR_SUMI)
               .margin({ bottom: 4 })
 
-            TextInput({ placeholder: '例如：外婆的小葱拌豆腐、奶奶的蛋饺', text: this.recipeName })
+            TextInput({ placeholder: '输入菜谱名称（例如：外婆的小葱拌豆腐、红烧牛肉）', text: this.recipeName })
               .width('100%')
               .height(40)
               .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
@@ -149,7 +203,7 @@ struct CreateRecipePage {
           })
           .margin({ bottom: 12 })
 
-          // 「这道菜的故事」专属核心区域
+          // 2. 「这道菜的故事」与「设为家传菜（在个人主页重点展出）」
           Column() {
             Row() {
               Text('🏮 这道菜的故事（核心灵魂）')
@@ -165,7 +219,7 @@ struct CreateRecipePage {
               text: this.story
             })
               .width('100%')
-              .height(110)
+              .height(95)
               .fontSize(StyleConstants.FONT_BODY_SM)
               .fontFamily('Songti SC')
               .fontColor(ColorConstants.COLOR_CHA)
@@ -175,12 +229,21 @@ struct CreateRecipePage {
                 this.story = v;
               })
 
+            // 设为家传菜 Switch 开关
             Row() {
-              Text('设为「家传菜」（在个人主页重点展出）')
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(ColorConstants.COLOR_SUMI)
+              Column() {
+                Text('设为「家传菜」（在个人主页重点展出）')
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(this.isFamilyRecipe ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_INK)
 
-              Blank()
+                Text(this.isFamilyRecipe ? '★ 已开启：将在我的家常菜列表中置顶并重点突出' : '未开启：作为普通家常菜展示')
+                  .fontSize(StyleConstants.FONT_BADGE)
+                  .fontColor(ColorConstants.COLOR_BO)
+                  .margin({ top: 2 })
+              }
+              .alignItems(HorizontalAlign.Start)
+              .layoutWeight(1)
 
               Toggle({ type: ToggleType.Switch, isOn: this.isFamilyRecipe })
                 .selectedColor(ColorConstants.COLOR_ZHU)
@@ -202,7 +265,7 @@ struct CreateRecipePage {
           })
           .margin({ bottom: 12 })
 
-          // 基本参数设置（时长、难度）
+          // 3. 烹饪时长（置 0）与难度
           Column() {
             Row() {
               Text('烹饪时长：')
@@ -211,8 +274,8 @@ struct CreateRecipePage {
 
               Slider({
                 value: this.cookTimeMin,
-                min: 5,
-                max: 120,
+                min: 0,
+                max: 180,
                 step: 5
               })
                 .layoutWeight(1)
@@ -224,8 +287,8 @@ struct CreateRecipePage {
               Text(`${this.cookTimeMin} 分钟`)
                 .fontSize(StyleConstants.FONT_CAPTION)
                 .fontWeight(FontWeight.Bold)
-                .fontColor(ColorConstants.COLOR_ZHU)
-                .width(60)
+                .fontColor(this.cookTimeMin > 0 ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_BO)
+                .width(64)
                 .textAlign(TextAlign.End)
             }
             .width('100%')
@@ -261,58 +324,76 @@ struct CreateRecipePage {
           })
           .margin({ bottom: 12 })
 
-          // 食材填写
+          // 4. 食材用量（置空，初始只有一行输入框，支持动态添加）
           Column() {
-            Text('🥗 食材用量')
-              .fontSize(StyleConstants.FONT_BODY_SM)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(ColorConstants.COLOR_INK)
-              .margin({ bottom: 8 })
-
             Row() {
-              TextInput({ placeholder: '食材 1（如：嫩豆腐）', text: this.ingredient1Name })
-                .layoutWeight(1)
-                .height(38)
-                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                .borderRadius(StyleConstants.RADIUS_SM)
-                .margin({ right: 8 })
-                .onChange((v: string) => {
-                  this.ingredient1Name = v;
-                })
+              Text('🥗 食材用量')
+                .fontSize(StyleConstants.FONT_BODY_SM)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(ColorConstants.COLOR_INK)
 
-              TextInput({ placeholder: '用量（如：1 块）', text: this.ingredient1Amount })
-                .width(90)
-                .height(38)
-                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                .borderRadius(StyleConstants.RADIUS_SM)
-                .onChange((v: string) => {
-                  this.ingredient1Amount = v;
-                })
+              Blank()
+
+              Text(`共 ${this.ingredientsList.length} 项`)
+                .fontSize(StyleConstants.FONT_CAPTION)
+                .fontColor(ColorConstants.COLOR_BO)
             }
             .width('100%')
             .margin({ bottom: 8 })
 
-            Row() {
-              TextInput({ placeholder: '食材 2（如：小葱）', text: this.ingredient2Name })
-                .layoutWeight(1)
-                .height(38)
-                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                .borderRadius(StyleConstants.RADIUS_SM)
-                .margin({ right: 8 })
-                .onChange((v: string) => {
-                  this.ingredient2Name = v;
+            ForEach(this.ingredientsList, (item: DynamicIngredient, index: number) => {
+              Row() {
+                TextInput({
+                  placeholder: `食材/调料 ${index + 1}（如：老豆腐）`,
+                  text: item.name
                 })
+                  .layoutWeight(1)
+                  .height(38)
+                  .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                  .borderRadius(StyleConstants.RADIUS_SM)
+                  .margin({ right: 6 })
+                  .onChange((v: string) => {
+                    item.name = v;
+                  })
 
-              TextInput({ placeholder: '用量（如：2 根）', text: this.ingredient2Amount })
-                .width(90)
-                .height(38)
-                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                .borderRadius(StyleConstants.RADIUS_SM)
-                .onChange((v: string) => {
-                  this.ingredient2Amount = v;
+                TextInput({
+                  placeholder: '数量/用量（如：1块）',
+                  text: item.amount
                 })
-            }
-            .width('100%')
+                  .width(100)
+                  .height(38)
+                  .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                  .borderRadius(StyleConstants.RADIUS_SM)
+                  .margin({ right: 6 })
+                  .onChange((v: string) => {
+                    item.amount = v;
+                  })
+
+                if (this.ingredientsList.length > 1) {
+                  Text('✕')
+                    .fontSize(16)
+                    .fontColor(ColorConstants.COLOR_BO)
+                    .padding(6)
+                    .onClick(() => {
+                      this.removeIngredientRow(index);
+                    })
+                }
+              }
+              .width('100%')
+              .margin({ bottom: 8 })
+            }, (item: DynamicIngredient) => item.id)
+
+            Button('＋ 新增一行食材与用量')
+              .width('100%')
+              .height(36)
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontColor(ColorConstants.COLOR_ZHU)
+              .backgroundColor('rgba(158, 43, 37, 0.08)')
+              .borderRadius(StyleConstants.RADIUS_SM)
+              .margin({ top: 4 })
+              .onClick(() => {
+                this.addIngredientRow();
+              })
           }
           .width('100%')
           .padding(StyleConstants.SPACE_MD)
@@ -324,68 +405,73 @@ struct CreateRecipePage {
           })
           .margin({ bottom: 12 })
 
-          // 步骤填写
+          // 5. 关键步骤（置空，可增加步骤一、步骤二，用户输入说明）
           Column() {
-            Text('👨‍🍳 关键步骤')
-              .fontSize(StyleConstants.FONT_BODY_SM)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(ColorConstants.COLOR_INK)
-              .margin({ bottom: 8 })
+            Row() {
+              Text('👨‍🍳 关键步骤')
+                .fontSize(StyleConstants.FONT_BODY_SM)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(ColorConstants.COLOR_INK)
 
-            Column() {
-              Text('步骤 1')
+              Blank()
+
+              Text(`共 ${this.stepsList.length} 步`)
                 .fontSize(StyleConstants.FONT_CAPTION)
                 .fontColor(ColorConstants.COLOR_BO)
-                .margin({ bottom: 4 })
-
-              TextInput({ placeholder: '步骤标题（如：备菜焯水）', text: this.step1Title })
-                .width('100%')
-                .height(38)
-                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                .borderRadius(StyleConstants.RADIUS_SM)
-                .margin({ bottom: 6 })
-                .onChange((v: string) => {
-                  this.step1Title = v;
-                })
-
-              TextInput({ placeholder: '详细步骤说明...', text: this.step1Desc })
-                .width('100%')
-                .height(38)
-                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                .borderRadius(StyleConstants.RADIUS_SM)
-                .onChange((v: string) => {
-                  this.step1Desc = v;
-                })
             }
             .width('100%')
-            .margin({ bottom: 10 })
+            .margin({ bottom: 8 })
 
-            Column() {
-              Text('步骤 2')
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(ColorConstants.COLOR_BO)
+            ForEach(this.stepsList, (step: DynamicStep, index: number) => {
+              Column() {
+                Row() {
+                  Text(`步骤 ${index + 1}`)
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(ColorConstants.COLOR_ZHU)
+
+                  Blank()
+
+                  if (this.stepsList.length > 1) {
+                    Text('删除本步骤')
+                      .fontSize(StyleConstants.FONT_BADGE)
+                      .fontColor(ColorConstants.COLOR_BO)
+                      .padding(4)
+                      .onClick(() => {
+                        this.removeStepRow(index);
+                      })
+                  }
+                }
+                .width('100%')
                 .margin({ bottom: 4 })
 
-              TextInput({ placeholder: '步骤标题（如：入味出锅）', text: this.step2Title })
-                .width('100%')
-                .height(38)
-                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                .borderRadius(StyleConstants.RADIUS_SM)
-                .margin({ bottom: 6 })
-                .onChange((v: string) => {
-                  this.step2Title = v;
+                TextArea({
+                  placeholder: `请输入步骤 ${index + 1} 的操作描述与火候说明...`,
+                  text: step.desc
                 })
+                  .width('100%')
+                  .height(64)
+                  .fontSize(StyleConstants.FONT_BODY_SM)
+                  .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                  .borderRadius(StyleConstants.RADIUS_SM)
+                  .onChange((v: string) => {
+                    step.desc = v;
+                  })
+              }
+              .width('100%')
+              .margin({ bottom: 10 })
+            }, (step: DynamicStep) => step.id)
 
-              TextInput({ placeholder: '详细步骤说明...', text: this.step2Desc })
-                .width('100%')
-                .height(38)
-                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                .borderRadius(StyleConstants.RADIUS_SM)
-                .onChange((v: string) => {
-                  this.step2Desc = v;
-                })
-            }
-            .width('100%')
+            Button(`＋ 增加步骤（步骤 ${this.stepsList.length + 1}）`)
+              .width('100%')
+              .height(36)
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontColor(ColorConstants.COLOR_ZHU)
+              .backgroundColor('rgba(158, 43, 37, 0.08)')
+              .borderRadius(StyleConstants.RADIUS_SM)
+              .onClick(() => {
+                this.addStepRow();
+              })
           }
           .width('100%')
           .padding(StyleConstants.SPACE_MD)
@@ -420,12 +506,5 @@ struct CreateRecipePage {
     .width('100%')
     .height('100%')
     .backgroundColor(ColorConstants.COLOR_XUAN)
-  }
-
-  pageTransition() {
-    PageTransitionEnter({ duration: 350, curve: Curve.EaseOut })
-      .opacity(0)
-    PageTransitionExit({ duration: 250, curve: Curve.EaseIn })
-      .opacity(0)
   }
 }

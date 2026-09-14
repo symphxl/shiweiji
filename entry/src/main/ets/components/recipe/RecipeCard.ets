@@ -1,6 +1,7 @@
 import { RecipeItem } from '../../common/models/RecipeModel';
 import { ColorConstants } from '../../common/constants/ColorConstants';
 import { StyleConstants } from '../../common/constants/StyleConstants';
+import { AppDataState } from '../../common/services/AppDataState';
 
 /**
  * 拾味记 · 菜谱卡片组件
@@ -12,6 +13,7 @@ export struct RecipeCard {
   @Prop matchBadge: string = '';
   @Prop badgeColor: string = ColorConstants.COLOR_QING;
   @Prop missingText: string = '';
+  @StorageLink('wishlistVersion') wishlistVersion: number = 0;
   onCardClick?: () => void;
 
   build() {
@@ -51,6 +53,17 @@ export struct RecipeCard {
               .fontWeight(FontWeight.Bold)
               .fontColor(ColorConstants.COLOR_INK)
               .layoutWeight(1)
+
+            if (AppDataState.getInstance().isRecipeCollected(this.recipe.id)) {
+              Text('🎯 想做')
+                .fontSize(StyleConstants.FONT_BADGE)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(ColorConstants.COLOR_ZHU)
+                .backgroundColor('rgba(158, 43, 37, 0.12)')
+                .borderRadius(StyleConstants.RADIUS_SM)
+                .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                .margin({ right: 6 })
+            }
 
             if (this.matchBadge.length > 0) {
               Text(this.matchBadge)

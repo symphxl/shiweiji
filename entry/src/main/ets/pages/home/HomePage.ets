@@ -51,7 +51,7 @@ export struct HomePage {
   private updateUserGreeting() {
     const currentName = (this.userNickname && this.userNickname.trim().length > 0)
       ? this.userNickname.trim()
-      : (this.state.userProfile.nickname || '食友');
+      : (this.state.userProfile.nickname || '拾味居士');
     this.userGreetingText = DateUtil.formatUserGreeting(currentName);
   }
 

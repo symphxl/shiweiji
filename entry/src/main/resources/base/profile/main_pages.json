@@ -11,6 +11,7 @@
     "pages/mine/CreateRecipePage",
     "pages/mine/DietLogPage",
     "pages/mine/EditProfilePage",
+    "pages/mine/WishlistPage",
     "pages/search/SearchPage"
   ]
 }

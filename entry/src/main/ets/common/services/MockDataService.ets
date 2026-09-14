@@ -712,20 +712,20 @@ export class MockDataService {
   static getDefaultUserProfile(): UserProfile {
     return {
       id: 'usr_001',
-      nickname: '陈蕙兰',
-      avatarText: '蕙',
+      nickname: '拾味居士',
+      avatarText: '拾',
       avatarBg: '#9E2B25',
-      bio: '把妈妈手把手教的味道，一道一道记在光阴里。',
-      location: '四川 · 成都',
-      familyRecipeBadge: '家传菜 ×3',
-      followingCount: 86,
-      followerCount: 1240,
-      likedCount: 5620,
-      recipeCount: 23,
-      collectCount: 142,
-      dietRecordCount: 67,
+      bio: '一饭一蔬，皆是清欢；把生活的烟火与心意，细细记在光阴里。',
+      location: '江南水乡',
+      familyRecipeBadge: '家传菜 ×0',
+      followingCount: 12,
+      followerCount: 108,
+      likedCount: 360,
+      recipeCount: 0,
+      collectCount: 0,
+      dietRecordCount: 0,
       fridgeItemCount: 7,
-      tastePreferences: ['川渝家常', '微辣鲜香', '减盐控油']
+      tastePreferences: ['川渝家常', '微辣鲜香', '清淡养生']
     };
   }
 }

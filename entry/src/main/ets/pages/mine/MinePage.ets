@@ -17,10 +17,12 @@ export struct MinePage {
   @StorageLink('recipeVersion') @Watch('refreshData') recipeVersion: number = 0;
   @StorageLink('profileVersion') @Watch('refreshData') profileVersion: number = 0;
   @StorageLink('inventoryVersion') @Watch('refreshData') inventoryVersion: number = 0;
+  @StorageLink('wishlistVersion') @Watch('refreshData') wishlistVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
   @State profile: UserProfile = this.state.userProfile;
   @State familyRecipes: RecipeItem[] = [];
   @State inventoryCount: number = 0;
+  @State wishlistCount: number = 0;
 
   aboutToAppear() {
     this.refreshData();
@@ -28,8 +30,16 @@ export struct MinePage {
 
   refreshData() {
     this.profile = this.state.userProfile;
-    this.familyRecipes = this.state.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_'));
+    this.wishlistCount = this.state.collectedRecipeIds.length;
     this.inventoryCount = this.state.inventory.length;
+
+    const list = this.state.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_'));
+    // 设为「家传菜」的置顶排序：isFamilyRecipe === true 严格排在最前
+    this.familyRecipes = list.sort((a, b) => {
+      if (a.isFamilyRecipe && !b.isFamilyRecipe) return -1;
+      if (!a.isFamilyRecipe && b.isFamilyRecipe) return 1;
+      return 0;
+    });
   }
 
   goToEditProfile() {
@@ -250,7 +260,36 @@ export struct MinePage {
               })
             }
 
-            // 2. 创建菜谱
+            // 2. 想做的菜（新增待做食单）
+            GridItem() {
+              Column() {
+                Stack({ alignContent: Alignment.TopEnd }) {
+                  Text('🍲')
+                    .fontSize(22)
+
+                  if (this.wishlistCount > 0) {
+                    Text(this.wishlistCount.toString())
+                      .fontSize(9)
+                      .fontWeight(FontWeight.Bold)
+                      .fontColor(Color.White)
+                      .backgroundColor(ColorConstants.COLOR_ZHU)
+                      .borderRadius(StyleConstants.RADIUS_PILL)
+                      .padding({ left: 4, right: 4, top: 1, bottom: 1 })
+                      .margin({ left: 16, top: -4 })
+                  }
+                }
+
+                Text('想做的菜')
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_INK)
+                  .margin({ top: 4 })
+              }
+              .onClick(() => {
+                router.pushUrl({ url: 'pages/mine/WishlistPage' });
+              })
+            }
+
+            // 3. 创建菜谱
             GridItem() {
               Column() {
                 Text('✍️')
@@ -265,7 +304,7 @@ export struct MinePage {
               })
             }
 
-            // 3. 饮食记录
+            // 4. 饮食记录
             GridItem() {
               Column() {
                 Text('📔')
@@ -280,7 +319,7 @@ export struct MinePage {
               })
             }
 
-            // 4. 偏好设置
+            // 5. 偏好设置
             GridItem() {
               Column() {
                 Text('⚙️')
@@ -295,9 +334,9 @@ export struct MinePage {
               })
             }
           }
-          .columnsTemplate('1fr 1fr 1fr 1fr')
+          .columnsTemplate('1fr 1fr 1fr 1fr 1fr')
           .rowsGap(8)
-          .columnsGap(8)
+          .columnsGap(4)
           .height(72)
         }
         .width('100%')
@@ -382,15 +421,41 @@ export struct MinePage {
                       .fontWeight(FontWeight.Bold)
                       .fontColor(ColorConstants.COLOR_INK)
 
-                    Text('📌')
-                      .fontSize(12)
-                      .margin({ left: 4 })
+                    // 设为「家传菜」时，在列表中置顶并放大标签重点突出
+                    if (rec.isFamilyRecipe) {
+                      Text('🏮 置顶 · 家传菜')
+                        .fontSize(StyleConstants.FONT_BODY_SM)
+                        .fontWeight(FontWeight.Bold)
+                        .fontColor(ColorConstants.COLOR_ZHU)
+                        .backgroundColor('rgba(158, 43, 37, 0.14)')
+                        .borderRadius(StyleConstants.RADIUS_SM)
+                        .padding({ left: 8, right: 8, top: 2, bottom: 2 })
+                        .margin({ left: 8 })
+                    } else {
+                      Text('家常菜')
+                        .fontSize(StyleConstants.FONT_BADGE)
+                        .fontColor(ColorConstants.COLOR_BO)
+                        .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                        .borderRadius(StyleConstants.RADIUS_SM)
+                        .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                        .margin({ left: 6 })
+                    }
+
+                    if (this.state.isRecipeCollected(rec.id)) {
+                      Text('🎯 想做')
+                        .fontSize(StyleConstants.FONT_BADGE)
+                        .fontColor(ColorConstants.COLOR_CHA)
+                        .backgroundColor('rgba(200, 155, 60, 0.14)')
+                        .borderRadius(StyleConstants.RADIUS_SM)
+                        .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                        .margin({ left: 4 })
+                    }
                   }
 
                   Text(rec.story.length > 25 ? rec.story.substring(0, 25) + '...' : rec.story)
                     .fontSize(StyleConstants.FONT_CAPTION)
                     .fontColor(ColorConstants.COLOR_BO)
-                    .margin({ top: 2 })
+                    .margin({ top: 3 })
                 }
                 .layoutWeight(1)
                 .alignItems(HorizontalAlign.Start)
@@ -404,8 +469,8 @@ export struct MinePage {
               .backgroundColor(ColorConstants.COLOR_PAPER)
               .borderRadius(StyleConstants.RADIUS_MD)
               .border({
-                width: 1,
-                color: ColorConstants.COLOR_DIVIDER
+                width: rec.isFamilyRecipe ? 1.5 : 1,
+                color: rec.isFamilyRecipe ? 'rgba(158, 43, 37, 0.28)' : ColorConstants.COLOR_DIVIDER
               })
               .margin({ bottom: 8 })
               .onClick(() => {

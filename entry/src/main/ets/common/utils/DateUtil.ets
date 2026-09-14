@@ -41,7 +41,7 @@ export class DateUtil {
    */
   static formatUserGreeting(nickname: string): string {
     const period = DateUtil.getTimePeriodGreeting();
-    const name = (nickname && nickname.trim().length > 0) ? nickname.trim() : '食友';
+    const name = (nickname && nickname.trim().length > 0) ? nickname.trim() : '拾味居士';
     return `${period}，${name}`;
   }
 

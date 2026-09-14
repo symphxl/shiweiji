@@ -131,11 +131,23 @@ struct RecipeDetailPage {
 
               // 浮动标题卡
               Column() {
-                Text(this.recipe.name)
-                  .fontSize(StyleConstants.FONT_H1)
-                  .fontWeight(FontWeight.Bold)
-                  .fontFamily('Songti SC')
-                  .fontColor(ColorConstants.COLOR_INK)
+                Row() {
+                  Text(this.recipe.name)
+                    .fontSize(StyleConstants.FONT_H1)
+                    .fontWeight(FontWeight.Bold)
+                    .fontFamily('Songti SC')
+                    .fontColor(ColorConstants.COLOR_INK)
+
+                  if (this.isCollected) {
+                    Text('🎯 想做')
+                      .fontSize(StyleConstants.FONT_BADGE)
+                      .fontColor(ColorConstants.COLOR_ZHU)
+                      .backgroundColor('rgba(158, 43, 37, 0.12)')
+                      .borderRadius(StyleConstants.RADIUS_SM)
+                      .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                      .margin({ left: 8 })
+                  }
+                }
 
                 Text(this.recipe.region)
                   .fontSize(StyleConstants.FONT_CAPTION)
@@ -389,9 +401,9 @@ struct RecipeDetailPage {
             // 收藏（单机想做标记）
             Button({ type: ButtonType.Normal }) {
               Column() {
-                Text(this.isCollected ? '❤️' : '🤍')
+                Text(this.isCollected ? '🎯' : '🤍')
                   .fontSize(18)
-                Text(this.isCollected ? '想做' : '标记')
+                Text(this.isCollected ? '已想做' : '想做')
                   .fontSize(StyleConstants.FONT_BADGE)
                   .fontColor(this.isCollected ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_SUMI)
               }
@@ -403,7 +415,7 @@ struct RecipeDetailPage {
               if (this.recipe) {
                 this.isCollected = this.state.toggleCollectRecipe(this.recipe.id);
                 promptAction.showToast({
-                  message: this.isCollected ? '已记录到「想做的菜」' : '已取消标记'
+                  message: this.isCollected ? '🎉 已加入「想做的菜」，可在厨房管理中查看' : '已从「想做的菜」移出'
                 });
               }
             })

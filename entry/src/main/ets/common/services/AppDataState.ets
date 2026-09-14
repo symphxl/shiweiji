@@ -7,6 +7,7 @@ import { ProfileStore } from './ProfileStore';
 import { RecipeStore } from './RecipeStore';
 import { IngredientStore } from './IngredientStore';
 import { InventoryStore } from './InventoryStore';
+import { WishlistStore } from './WishlistStore';
 import { AddIngredientResult, RecipeIngredientFilter } from './RecipeIngredientFilter';
 import { EXCEL_INGREDIENT_NAMES } from '../data/ExcelIngredientsData';
 import { UserProfile } from '../models/UserModel';
@@ -54,6 +55,7 @@ export class AppDataState {
   private recipeVersion: number = 0;
   private ingredientVersion: number = 0;
   private inventoryVersion: number = 0;
+  wishlistVersion: number = 0;
 
   private constructor() {
     this.recipes = MockDataService.getInitialRecipes();
@@ -177,22 +179,52 @@ export class AppDataState {
     return checked.length;
   }
 
-  // ================= 收藏管理 =================
+  // ================= 收藏与「想做的菜」心愿管理 =================
   toggleCollectRecipe(recipeId: string): boolean {
+    let isAdded = false;
     const idx = this.collectedRecipeIds.indexOf(recipeId);
     if (idx >= 0) {
       this.collectedRecipeIds.splice(idx, 1);
       this.userProfile.collectCount = Math.max(0, this.userProfile.collectCount - 1);
-      return false;
+      isAdded = false;
     } else {
       this.collectedRecipeIds.push(recipeId);
       this.userProfile.collectCount++;
-      return true;
+      isAdded = true;
     }
+    this.wishlistVersion += 1;
+    AppStorage.setOrCreate('wishlistVersion', this.wishlistVersion);
+    const ctx = this.ensureContext();
+    if (ctx) {
+      WishlistStore.save(ctx, this.collectedRecipeIds);
+    }
+    return isAdded;
   }
 
   isRecipeCollected(recipeId: string): boolean {
     return this.collectedRecipeIds.includes(recipeId);
+  }
+
+  getWishlistRecipes(): RecipeItem[] {
+    const ids = new Set(this.collectedRecipeIds);
+    return this.recipes.filter(r => ids.has(r.id));
+  }
+
+  restoreWishlist(context: common.Context): void {
+    if (!context) {
+      return;
+    }
+    try {
+      const saved = WishlistStore.restore(context);
+      if (saved !== null && Array.isArray(saved)) {
+        this.collectedRecipeIds = saved;
+        this.userProfile.collectCount = saved.length;
+        this.wishlistVersion += 1;
+        AppStorage.setOrCreate('wishlistVersion', this.wishlistVersion);
+      }
+    } catch (e) {
+      // 容错处理
+    }
   }
 
   // ================= 动态与互动 =================
@@ -317,8 +349,7 @@ export class AppDataState {
 
   // ================= 自创与家常菜谱 =================
   addCustomRecipe(recipe: RecipeItem): void {
-    recipe.isFamilyRecipe = true;
-    recipe.isFamilyRecipe = true;
+    recipe.isFamilyRecipe = !!recipe.isFamilyRecipe;
     const existIdx = this.customRecipes.findIndex(r => r.id === recipe.id);
     if (existIdx >= 0) {
       this.customRecipes[existIdx] = recipe;
@@ -332,7 +363,7 @@ export class AppDataState {
     } else {
       this.recipes.unshift(recipe);
     }
-    const familyCount = this.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_')).length;
+    const familyCount = this.recipes.filter(r => r.isFamilyRecipe).length;
     this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
     this.userProfile.recipeCount = this.recipes.length;
 
@@ -359,10 +390,12 @@ export class AppDataState {
       const saved = RecipeStore.restore(context);
       if (saved && saved.length > 0) {
         this.customRecipes = saved;
-        this.customRecipes.forEach(r => r.isFamilyRecipe = true);
+        this.customRecipes.forEach(r => {
+          r.isFamilyRecipe = r.isFamilyRecipe === true;
+        });
         const savedIds = new Set(saved.map(r => r.id));
         this.recipes = this.customRecipes.concat(this.recipes.filter(r => !savedIds.has(r.id)));
-        const familyCount = this.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_')).length;
+        const familyCount = this.recipes.filter(r => r.isFamilyRecipe).length;
         this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
         this.userProfile.recipeCount = this.recipes.length;
         this.recipeVersion += 1;
@@ -416,7 +449,8 @@ export class AppDataState {
     this.restoreCustomRecipes(context);
     this.restoreCustomIngredients(context);
     this.restoreInventory(context);
-    const familyCount = this.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_')).length;
+    this.restoreWishlist(context);
+    const familyCount = this.recipes.filter(r => r.isFamilyRecipe).length;
     this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
     this.userProfile.fridgeItemCount = this.inventory.length;
     AppStorage.setOrCreate('userNickname', this.userProfile.nickname);
