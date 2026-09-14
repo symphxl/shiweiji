@@ -325,7 +325,10 @@ struct FridgePage {
       .height('100%')
       .justifyContent(FlexAlign.Start)
       .alignItems(HorizontalAlign.Start)
-      .backgroundColor(ColorConstants.COLOR_XUAN)
+      .backgroundColor(Color.Transparent)
+      .backgroundImage($rawfile('image/img_background.png'), ImageRepeat.NoRepeat)
+      .backgroundImageSize(ImageSize.Cover)
+      .backgroundImagePosition(Alignment.Center)
 
       // 底部浮动「清空冰箱配菜」按钮
       Row() {
