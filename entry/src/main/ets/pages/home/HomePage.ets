@@ -234,9 +234,9 @@ export struct HomePage {
     Stack({ alignContent: Alignment.Bottom }) {
       Scroll() {
       Column() {
-        // ================= 首页抬头/眉头 Header（大图背景层叠区域） =================
+        // ================= 首页抬头/眉头 Header（大图背景层叠区域：仅覆盖搜索栏与问候横条） =================
         Stack({ alignContent: Alignment.Bottom }) {
-          // 眉头前景内容区（背景图绑定于此，高度完全由内容紧凑决定，红色按钮下方不留多余空白）
+          // 顶部背景图与问候区域
           Column() {
             // 顶部搜索快捷栏
             Row() {
@@ -290,127 +290,20 @@ export struct HomePage {
             }
             .width('100%')
             .alignItems(HorizontalAlign.Start)
-            .padding({ left: 16, right: 16, top: 10, bottom: 10 })
+            .padding({ left: 16, right: 16, top: 10, bottom: 12 })
             .backgroundColor('rgba(68, 24, 20, 0.50)')
-            .margin({ top: 6, bottom: 6 })
-
-            // 核心区：我的冰箱快捷管理
-            Column() {
-              Row() {
-                Row() {
-                  Text('🧊')
-                    .fontSize(16)
-                    .margin({ right: 4 })
-                  Text('我的冰箱')
-                    .fontSize(StyleConstants.FONT_BODY)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor(ColorConstants.COLOR_INK)
-                }
-
-                Blank()
-
-                Text('管理 ›')
-                  .fontSize(StyleConstants.FONT_CAPTION)
-                  .fontColor(ColorConstants.COLOR_ZHU)
-                  .onClick(() => {
-                    router.pushUrl({ url: 'pages/mine/FridgePage' });
-                  })
-              }
-              .width('100%')
-              .margin({ top: 4, bottom: 8 })
-
-              // 冰箱食材胶囊条
-              Column() {
-                Flex({ wrap: FlexWrap.Wrap }) {
-                  ForEach(this.state.inventory.slice(0, 6), (item: InventoryItem) => {
-                    Text(`${item.name}×${item.quantity}`)
-                      .fontSize(StyleConstants.FONT_CAPTION)
-                      .fontColor(ColorConstants.COLOR_ZHU)
-                      .fontWeight(FontWeight.Medium)
-                      .backgroundColor('rgba(158, 43, 37, 0.08)')
-                      .border({
-                        width: 1,
-                        color: ColorConstants.COLOR_ZHU
-                      })
-                      .borderRadius(StyleConstants.RADIUS_PILL)
-                      .padding({ left: 10, right: 10, top: 4, bottom: 4 })
-                      .margin({ right: 6, bottom: 6 })
-                  }, (item: InventoryItem) => `${item.id}_${item.quantity}_${this.inventoryVersion}`)
-
-                  Text('＋ 添加')
-                    .fontSize(StyleConstants.FONT_CAPTION)
-                    .fontColor(ColorConstants.COLOR_SUMI)
-                    .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                    .borderRadius(StyleConstants.RADIUS_PILL)
-                    .padding({ left: 10, right: 10, top: 4, bottom: 4 })
-                    .margin({ right: 6, bottom: 6 })
-                    .onClick(() => {
-                      this.showQuickAddDialog = true;
-                    })
-                }
-                .width('100%')
-
-                // 临期提醒（根据本地持久化库存动态计算）
-                Row() {
-                  if (this.getExpiringItem() !== null) {
-                    Text(`⚠️ ${this.getExpiringItem()!.name} ${this.getExpiringItem()!.daysRemaining <= 0 ? '已过期' : this.getExpiringItem()!.daysRemaining + ' 天后临期'}，今天用掉它 ›`)
-                      .fontSize(StyleConstants.FONT_CAPTION)
-                      .fontColor(ColorConstants.COLOR_WARNING)
-                      .onClick(() => {
-                        router.pushUrl({ url: 'pages/mine/FridgePage' });
-                      })
-                  } else {
-                    Text('✓ 冰箱食材储备新鲜，随心搭配出美味 ›')
-                      .fontSize(StyleConstants.FONT_CAPTION)
-                      .fontColor(ColorConstants.COLOR_QING)
-                      .onClick(() => {
-                        router.pushUrl({ url: 'pages/mine/FridgePage' });
-                      })
-                  }
-                }
-                .width('100%')
-                .margin({ top: 4 })
-              }
-              .width('100%')
-              .padding(StyleConstants.SPACE_MD)
-              .backgroundColor('rgba(255, 255, 255, 0.95)')
-              .borderRadius(StyleConstants.RADIUS_LG)
-              .shadow({
-                radius: 12,
-                color: 'rgba(0, 0, 0, 0.06)',
-                offsetX: 0,
-                offsetY: 3
-              })
-
-              // 一键看能做什么主按钮
-              Button('用这些食材，看看能做什么 →')
-                .width('100%')
-                .height(44)
-                .backgroundColor(ColorConstants.COLOR_ZHU)
-                .fontColor(Color.White)
-                .fontSize(StyleConstants.FONT_BODY)
-                .fontWeight(FontWeight.Bold)
-                .borderRadius(StyleConstants.RADIUS_MD)
-                .margin({ top: 12, bottom: 12 })
-                .onClick(() => {
-                  if (this.onSwitchToRecipeTab) {
-                    this.onSwitchToRecipeTab();
-                  }
-                })
-            }
-            .width('100%')
-            .padding({ left: 16, right: 16 })
+            .margin({ top: 6, bottom: 10 })
           }
           .width('100%')
           .backgroundImage($rawfile('image/01_index.jpg'), ImageRepeat.NoRepeat)
           .backgroundImageSize(ImageSize.Cover)
           .backgroundImagePosition(Alignment.Top)
-          .padding({ bottom: 12 })
+          .padding({ bottom: 8 })
 
           // 底部自然羽化过渡层，融入下方的宣纸底色
           Row()
             .width('100%')
-            .height(36)
+            .height(28)
             .linearGradient({
               angle: 180,
               colors: [
@@ -422,6 +315,113 @@ export struct HomePage {
             .hitTestBehavior(HitTestMode.None)
         }
         .width('100%')
+
+        // 核心区：我的冰箱快捷管理（背景图下方，下沿紧贴今日推荐）
+        Column() {
+          Row() {
+            Row() {
+              Text('🧊')
+                .fontSize(16)
+                .margin({ right: 4 })
+              Text('我的冰箱')
+                .fontSize(StyleConstants.FONT_BODY)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(ColorConstants.COLOR_INK)
+            }
+
+            Blank()
+
+            Text('管理 ›')
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontColor(ColorConstants.COLOR_ZHU)
+              .onClick(() => {
+                router.pushUrl({ url: 'pages/mine/FridgePage' });
+              })
+          }
+          .width('100%')
+          .margin({ top: 4, bottom: 8 })
+
+          // 冰箱食材胶囊条
+          Column() {
+            Flex({ wrap: FlexWrap.Wrap }) {
+              ForEach(this.state.inventory.slice(0, 6), (item: InventoryItem) => {
+                Text(`${item.name}×${item.quantity}`)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_ZHU)
+                  .fontWeight(FontWeight.Medium)
+                  .backgroundColor('rgba(158, 43, 37, 0.08)')
+                  .border({
+                    width: 1,
+                    color: ColorConstants.COLOR_ZHU
+                  })
+                  .borderRadius(StyleConstants.RADIUS_PILL)
+                  .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+                  .margin({ right: 6, bottom: 6 })
+              }, (item: InventoryItem) => `${item.id}_${item.quantity}_${this.inventoryVersion}`)
+
+              Text('＋ 添加')
+                .fontSize(StyleConstants.FONT_CAPTION)
+                .fontColor(ColorConstants.COLOR_SUMI)
+                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
+                .borderRadius(StyleConstants.RADIUS_PILL)
+                .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+                .margin({ right: 6, bottom: 6 })
+                .onClick(() => {
+                  this.showQuickAddDialog = true;
+                })
+            }
+            .width('100%')
+
+            // 临期提醒（根据本地持久化库存动态计算）
+            Row() {
+              if (this.getExpiringItem() !== null) {
+                Text(`⚠️ ${this.getExpiringItem()!.name} ${this.getExpiringItem()!.daysRemaining <= 0 ? '已过期' : this.getExpiringItem()!.daysRemaining + ' 天后临期'}，今天用掉它 ›`)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_WARNING)
+                  .onClick(() => {
+                    router.pushUrl({ url: 'pages/mine/FridgePage' });
+                  })
+              } else {
+                Text('✓ 冰箱食材储备新鲜，随心搭配出美味 ›')
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_QING)
+                  .onClick(() => {
+                    router.pushUrl({ url: 'pages/mine/FridgePage' });
+                  })
+              }
+            }
+            .width('100%')
+            .margin({ top: 4 })
+          }
+          .width('100%')
+          .padding(StyleConstants.SPACE_MD)
+          .backgroundColor('rgba(255, 255, 255, 0.95)')
+          .borderRadius(StyleConstants.RADIUS_LG)
+          .shadow({
+            radius: 12,
+            color: 'rgba(0, 0, 0, 0.06)',
+            offsetX: 0,
+            offsetY: 3
+          })
+
+          // 一键看能做什么主按钮
+          Button('用这些食材，看看能做什么 →')
+            .width('100%')
+            .height(44)
+            .backgroundColor(ColorConstants.COLOR_ZHU)
+            .fontColor(Color.White)
+            .fontSize(StyleConstants.FONT_BODY)
+            .fontWeight(FontWeight.Bold)
+            .borderRadius(StyleConstants.RADIUS_MD)
+            .margin({ top: 12, bottom: 12 })
+            .onClick(() => {
+              if (this.onSwitchToRecipeTab) {
+                this.onSwitchToRecipeTab();
+              }
+            })
+        }
+        .width('100%')
+        .padding({ left: 16, right: 16 })
 
         // 今日推荐 · 三菜一汤
         Column() {
