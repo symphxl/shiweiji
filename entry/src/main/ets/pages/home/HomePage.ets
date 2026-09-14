@@ -234,103 +234,60 @@ export struct HomePage {
     Stack({ alignContent: Alignment.Bottom }) {
       Scroll() {
       Column() {
-        // ================= 首页眉头 (Header) =================
-        Stack({ alignContent: Alignment.TopStart }) {
-          // 眉头左背景图层与宣纸羽化渐变
+        // 顶部搜索快捷栏
+        Row() {
           Row() {
-            Stack({ alignContent: Alignment.TopStart }) {
-              Image($rawfile('image/01_index.jpg'))
-                .width(230)
-                .height('100%')
-                .objectFit(ImageFit.Cover)
-                .opacity(0.35)
+            Text('🔍')
+              .fontSize(14)
+              .margin({ right: 8 })
 
-              // 水平渐变过渡层：从左到右融入宣纸色
-              Row()
-                .width(230)
-                .height('100%')
-                .linearGradient({
-                  angle: 90,
-                  colors: [
-                    ['rgba(247, 243, 234, 0.05)', 0.0],
-                    ['rgba(247, 243, 234, 0.65)', 0.55],
-                    [ColorConstants.COLOR_XUAN, 1.0]
-                  ]
-                })
-            }
-
-            Blank()
+            Text('搜索菜谱、食材、故事或朝代美食...')
+              .fontSize(StyleConstants.FONT_CAPTION)
+              .fontColor(ColorConstants.COLOR_BO)
           }
-          .width('100%')
-          .height('100%')
-
-          // 垂直微渐变：与下方内容平滑过渡
-          Column()
-            .width('100%')
-            .height('100%')
-            .linearGradient({
-              angle: 180,
-              colors: [
-                ['rgba(247, 243, 234, 0.15)', 0.0],
-                ['rgba(247, 243, 234, 0.7)', 0.75],
-                [ColorConstants.COLOR_XUAN, 1.0]
-              ]
-            })
-
-          // 眉头内容区：顶部搜索快捷栏 + Hero 问候与东方诗意语录
-          Column() {
-            // 顶部搜索快捷栏
-            Row() {
-              Row() {
-                Text('🔍')
-                  .fontSize(14)
-                  .margin({ right: 8 })
-
-                Text('搜索菜谱、食材、故事或朝代美食...')
-                  .fontSize(StyleConstants.FONT_CAPTION)
-                  .fontColor(ColorConstants.COLOR_BO)
-              }
-              .layoutWeight(1)
-              .height(36)
-              .backgroundColor('rgba(255, 255, 255, 0.88)')
-              .borderRadius(StyleConstants.RADIUS_PILL)
-              .border({
-                width: 1,
-                color: ColorConstants.COLOR_DIVIDER
-              })
-              .padding({ left: 14, right: 14 })
-              .onClick(() => {
-                router.pushUrl({ url: 'pages/search/SearchPage' });
-              })
-            }
-            .width('100%')
-            .padding({ left: 16, right: 16, top: this.topSafeHeight + 8, bottom: 8 })
-
-            // Hero 问候与东方诗意语录
-            Column() {
-              Text(DateUtil.formatUserGreeting(this.userNickname || this.state.userProfile.nickname))
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(ColorConstants.COLOR_BO)
-
-              Text('今天想吃点什么？')
-                .fontSize(StyleConstants.FONT_H1)
-                .fontWeight(FontWeight.Bold)
-                .fontFamily('Songti SC')
-                .fontColor(ColorConstants.COLOR_INK)
-                .margin({ top: 4, bottom: 4 })
-
-              Text(DateUtil.getTodaySolarTermGreeting())
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(ColorConstants.COLOR_CHA)
-            }
-            .width('100%')
-            .alignItems(HorizontalAlign.Start)
-            .padding({ left: 16, right: 16, top: 8, bottom: 14 })
-          }
-          .width('100%')
+          .layoutWeight(1)
+          .height(36)
+          .backgroundColor(ColorConstants.COLOR_PAPER)
+          .borderRadius(StyleConstants.RADIUS_PILL)
+          .border({
+            width: 1,
+            color: ColorConstants.COLOR_DIVIDER
+          })
+          .padding({ left: 14, right: 14 })
+          .onClick(() => {
+            router.pushUrl({ url: 'pages/search/SearchPage' });
+          })
         }
         .width('100%')
-        .clip(true)
+        .padding({ left: 16, right: 16, top: this.topSafeHeight + 8, bottom: 8 })
+
+        // Hero 问候与东方诗意语录
+        Column() {
+          Text(DateUtil.formatUserGreeting(this.userNickname || this.state.userProfile.nickname))
+            .fontSize(StyleConstants.FONT_CAPTION)
+            .fontColor(ColorConstants.COLOR_BO)
+
+          Text('今天想吃点什么？')
+            .fontSize(StyleConstants.FONT_H1)
+            .fontWeight(FontWeight.Bold)
+            .fontFamily('Songti SC')
+            .fontColor(ColorConstants.COLOR_INK)
+            .margin({ top: 4, bottom: 4 })
+
+          Text(DateUtil.getTodaySolarTermGreeting())
+            .fontSize(StyleConstants.FONT_CAPTION)
+            .fontColor(ColorConstants.COLOR_CHA)
+        }
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+        .padding({ left: 16, right: 16, top: 12, bottom: 12 })
+        .linearGradient({
+          angle: 160,
+          colors: [
+            ['rgba(158, 43, 37, 0.08)', 0.0],
+            ['rgba(200, 155, 60, 0.05)', 1.0]
+          ]
+        })
         .borderRadius({ bottomLeft: StyleConstants.RADIUS_LG, bottomRight: StyleConstants.RADIUS_LG })
 
         // 核心区：我的冰箱快捷管理
