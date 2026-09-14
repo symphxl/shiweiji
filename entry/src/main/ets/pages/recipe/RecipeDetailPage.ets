@@ -48,6 +48,8 @@ struct RecipeDetailPage {
       if (found) {
         this.recipe = found;
         this.isCollected = this.state.isRecipeCollected(found.id);
+      } else {
+        router.back();
       }
     }
   }

@@ -234,6 +234,38 @@ struct CreateRecipePage {
     }, 500);
   }
 
+  confirmDeleteRecipe() {
+    AlertDialog.show({
+      title: '删除菜谱',
+      message: `确定要删除「${this.recipeName.trim() || '这道菜谱'}」吗？删除后将无法恢复。`,
+      primaryButton: {
+        value: '取消',
+        action: () => {}
+      },
+      secondaryButton: {
+        value: '确认删除',
+        fontColor: ColorConstants.COLOR_ERROR,
+        action: () => {
+          this.executeDeleteRecipe();
+        }
+      }
+    });
+  }
+
+  executeDeleteRecipe() {
+    try {
+      this.state.setContext(getContext(this) as common.Context);
+    } catch (e) {}
+
+    this.state.deleteCustomRecipe(this.targetRecipeId);
+    promptAction.showToast({
+      message: '🗑️ 菜谱已删除'
+    });
+    setTimeout(() => {
+      router.back();
+    }, 400);
+  }
+
   build() {
     Column() {
       ShiWeiNavBar({
@@ -626,7 +658,7 @@ struct CreateRecipePage {
           })
           .margin({ bottom: 20 })
 
-          Button('确认保存并收录')
+          Button(this.isEditMode ? '确认保存修改' : '确认保存并收录')
             .width('100%')
             .height(44)
             .backgroundColor(ColorConstants.COLOR_ZHU)
@@ -634,10 +666,29 @@ struct CreateRecipePage {
             .fontSize(StyleConstants.FONT_BODY)
             .fontWeight(FontWeight.Bold)
             .borderRadius(StyleConstants.RADIUS_MD)
-            .margin({ bottom: 30 })
+            .margin({ bottom: this.isEditMode ? 12 : 30 })
             .onClick(() => {
               this.submitRecipe();
             })
+
+          if (this.isEditMode) {
+            Button('🗑️ 删除这道菜谱')
+              .width('100%')
+              .height(44)
+              .backgroundColor('rgba(166, 58, 46, 0.10)')
+              .fontColor(ColorConstants.COLOR_ERROR)
+              .fontSize(StyleConstants.FONT_BODY)
+              .fontWeight(FontWeight.Medium)
+              .borderRadius(StyleConstants.RADIUS_MD)
+              .border({
+                width: 1,
+                color: 'rgba(166, 58, 46, 0.35)'
+              })
+              .margin({ bottom: 30 })
+              .onClick(() => {
+                this.confirmDeleteRecipe();
+              })
+          }
         }
         .width('100%')
         .padding(StyleConstants.SPACE_MD)

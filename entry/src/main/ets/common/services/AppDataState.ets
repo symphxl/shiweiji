@@ -403,6 +403,43 @@ export class AppDataState {
     AppStorage.setOrCreate('profileVersion', this.profileVersion);
   }
 
+  // 删除自创/家常/家传菜谱并本地持久化
+  deleteCustomRecipe(recipeId: string): void {
+    const customIdx = this.customRecipes.findIndex(r => r.id === recipeId);
+    if (customIdx >= 0) {
+      this.customRecipes.splice(customIdx, 1);
+    }
+    const recIdx = this.recipes.findIndex(r => r.id === recipeId);
+    if (recIdx >= 0) {
+      this.recipes.splice(recIdx, 1);
+    }
+    const collIdx = this.collectedRecipeIds.indexOf(recipeId);
+    if (collIdx >= 0) {
+      this.collectedRecipeIds.splice(collIdx, 1);
+      const ctxWish = this.ensureContext();
+      if (ctxWish) {
+        WishlistStore.save(ctxWish, this.collectedRecipeIds);
+      }
+      this.wishlistVersion += 1;
+      AppStorage.setOrCreate('wishlistVersion', this.wishlistVersion);
+    }
+    const familyCount = this.recipes.filter(r => r.isFamilyRecipe).length;
+    this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
+    this.userProfile.recipeCount = this.recipes.length;
+
+    // 持久化保存至本地存储
+    const ctx = this.ensureContext();
+    if (ctx) {
+      RecipeStore.save(ctx, this.customRecipes);
+    }
+
+    // 触发全局响应式变更通知
+    this.recipeVersion += 1;
+    AppStorage.setOrCreate('recipeVersion', this.recipeVersion);
+    this.profileVersion += 1;
+    AppStorage.setOrCreate('profileVersion', this.profileVersion);
+  }
+
   setContext(context: common.Context): void {
     this.context = context;
   }
