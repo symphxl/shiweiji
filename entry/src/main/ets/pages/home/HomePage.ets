@@ -17,6 +17,7 @@ import promptAction from '@ohos.promptAction';
 export struct HomePage {
   onSwitchToRecipeTab?: () => void;
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageProp('userNickname') @Watch('onProfileChanged') userNickname: string = '';
   @StorageLink('inventoryVersion') @Watch('onInventoryChanged') inventoryVersion: number = 0;
   @StorageLink('recipeVersion') @Watch('onRecipeVersionChanged') recipeVersion: number = 0;
   @StorageLink('profileVersion') @Watch('onProfileChanged') profileVersion: number = 0;
@@ -47,7 +48,10 @@ export struct HomePage {
   }
 
   private updateUserGreeting() {
-    this.userGreetingText = DateUtil.formatUserGreeting(this.state.userProfile.nickname);
+    const currentName = (this.userNickname && this.userNickname.trim().length > 0)
+      ? this.userNickname.trim()
+      : (this.state.userProfile.nickname || '食友');
+    this.userGreetingText = DateUtil.formatUserGreeting(currentName);
   }
 
   onInventoryChanged() {
@@ -259,7 +263,7 @@ export struct HomePage {
 
         // Hero 问候与东方诗意语录
         Column() {
-          Text(this.userGreetingText.length > 0 ? this.userGreetingText : DateUtil.formatUserGreeting(this.state.userProfile.nickname))
+          Text(DateUtil.formatUserGreeting(this.userNickname || this.state.userProfile.nickname))
             .fontSize(StyleConstants.FONT_CAPTION)
             .fontColor(ColorConstants.COLOR_BO)
 

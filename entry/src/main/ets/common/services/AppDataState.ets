@@ -61,6 +61,7 @@ export class AppDataState {
     this.shoppingList = MockDataService.getInitialShoppingList();
     this.posts = MockDataService.getInitialPosts();
     this.userProfile = MockDataService.getDefaultUserProfile();
+    AppStorage.setOrCreate('userNickname', this.userProfile.nickname);
     AppStorage.setOrCreate('profileVersion', 0);
     AppStorage.setOrCreate('recipeVersion', 0);
     AppStorage.setOrCreate('ingredientVersion', 0);
@@ -418,6 +419,7 @@ export class AppDataState {
     const familyCount = this.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_')).length;
     this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
     this.userProfile.fridgeItemCount = this.inventory.length;
+    AppStorage.setOrCreate('userNickname', this.userProfile.nickname);
     this.profileVersion += 1;
     AppStorage.setOrCreate('profileVersion', this.profileVersion);
   }
@@ -450,6 +452,7 @@ export class AppDataState {
       fridgeItemCount: this.inventory.length,
       tastePreferences: tastePreferences
     };
+    AppStorage.setOrCreate('userNickname', nickname);
     this.profileVersion += 1;
     AppStorage.setOrCreate('profileVersion', this.profileVersion);
     const ctx = this.ensureContext();

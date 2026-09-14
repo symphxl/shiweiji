@@ -1,5 +1,6 @@
 import { ColorConstants } from '../common/constants/ColorConstants';
 import { StyleConstants } from '../common/constants/StyleConstants';
+import { AppDataState } from '../common/services/AppDataState';
 import { HomePage } from './home/HomePage';
 import { RecipeListPage } from './recipe/RecipeListPage';
 import { DietWikiPage } from './diet/DietWikiPage';
@@ -18,8 +19,13 @@ struct Index {
   private tabController: TabsController = new TabsController();
 
   onPageShow() {
+    const profile = AppDataState.getInstance().userProfile;
     AppStorage.setOrCreate('recipeVersion', Date.now());
     AppStorage.setOrCreate('inventoryVersion', Date.now());
+    AppStorage.setOrCreate('profileVersion', Date.now());
+    if (profile && profile.nickname) {
+      AppStorage.setOrCreate('userNickname', profile.nickname);
+    }
   }
 
   @Builder

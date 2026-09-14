@@ -13,6 +13,7 @@ import { RecipeItem } from '../../common/models/RecipeModel';
 @Component
 export struct MinePage {
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageProp('userNickname') @Watch('refreshData') userNickname: string = '';
   @StorageLink('recipeVersion') @Watch('refreshData') recipeVersion: number = 0;
   @StorageLink('profileVersion') @Watch('refreshData') profileVersion: number = 0;
   @StorageLink('inventoryVersion') @Watch('refreshData') inventoryVersion: number = 0;

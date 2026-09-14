@@ -104,6 +104,8 @@ struct EditProfilePage {
       this.tastePreferences,
       this.avatarImage
     );
+    AppStorage.setOrCreate('userNickname', name);
+    AppStorage.setOrCreate('profileVersion', Date.now());
     promptAction.showToast({ message: '🎉 个人资料已保存至本地！' });
     setTimeout(() => {
       router.back();
