@@ -856,7 +856,7 @@ export struct RecipeListPage {
     .scrollBar(BarState.Off)
     .width('100%')
     .height('100%')
-    .backgroundColor(ColorConstants.COLOR_XUAN)
+    .backgroundColor(Color.Transparent)
   }
 
   // 结果区标题（正向筛选）

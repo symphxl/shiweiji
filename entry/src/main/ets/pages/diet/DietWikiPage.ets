@@ -355,6 +355,6 @@ export struct DietWikiPage {
     .scrollBar(BarState.Off)
     .width('100%')
     .height('100%')
-    .backgroundColor(ColorConstants.COLOR_XUAN)
+    .backgroundColor(Color.Transparent)
   }
 }

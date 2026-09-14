@@ -87,7 +87,7 @@ struct Index {
       .onChange((index: number) => {
         this.currentTabIndex = index;
       })
-      .backgroundColor(ColorConstants.COLOR_XUAN)
+      .backgroundColor(Color.Transparent)
       .barBackgroundColor(ColorConstants.COLOR_PAPER)
       .barHeight(56 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 0))
       .barMode(BarMode.Fixed)
@@ -99,6 +99,10 @@ struct Index {
     .width('100%')
     .height('100%')
     .backgroundColor(ColorConstants.COLOR_XUAN)
+    .backgroundImage($rawfile('image/img_background.png'), ImageRepeat.NoRepeat)
+    .backgroundImageSize(ImageSize.Cover)
+    .backgroundImagePosition(Alignment.Center)
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 }
+

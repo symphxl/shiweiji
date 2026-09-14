@@ -426,6 +426,6 @@ export struct MinePage {
     .width('100%')
     .height('100%')
     .align(Alignment.Top)
-    .backgroundColor(ColorConstants.COLOR_XUAN)
+    .backgroundColor(Color.Transparent)
   }
 }
