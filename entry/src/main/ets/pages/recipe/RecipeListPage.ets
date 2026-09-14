@@ -276,47 +276,62 @@ export struct RecipeListPage {
   build() {
     Scroll() {
       Column() {
-        // 顶部标题与已选统计
-        Row() {
+        // ================= 食谱页抬头/眉头 Header（大图背景层叠区域） =================
+        Stack({ alignContent: Alignment.Bottom }) {
           Column() {
-            Text('食谱 · 智能搭配')
-              .fontSize(StyleConstants.FONT_H2)
-              .fontWeight(FontWeight.Bold)
-              .fontFamily('Songti SC')
-              .fontColor(ColorConstants.COLOR_INK)
+            // 顶部标题与已选统计（深红棕半透明横条，白字突出）
+            Row() {
+              Column() {
+                Row() {
+                  Text('食谱 · 智能搭配')
+                    .fontSize(StyleConstants.FONT_H2)
+                    .fontWeight(FontWeight.Bold)
+                    .fontFamily('Songti SC')
+                    .fontColor(Color.White)
 
-            Text(this.ingredientSource === 'repository'
-              ? '固定食材库 · 精确 / 模糊双向匹配'
-              : '我的冰箱 · 看看今天能做什么')
-              .fontSize(StyleConstants.FONT_CAPTION)
-              .fontColor(ColorConstants.COLOR_BO)
-              .margin({ top: 2 })
-          }
-          .alignItems(HorizontalAlign.Start)
+                  Text('🥗')
+                    .fontSize(18)
+                    .margin({ left: 6 })
+                }
 
-          Blank()
+                Text(this.ingredientSource === 'repository'
+                  ? '固定食材库 · 精确 / 模糊双向匹配'
+                  : '我的冰箱 · 看看今天能做什么')
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor('rgba(255, 255, 255, 0.88)')
+                  .margin({ top: 3 })
+              }
+              .alignItems(HorizontalAlign.Start)
 
-          Row() {
-            Text(`已选 ${this.selectedIngredients.length} 样`)
-              .fontSize(StyleConstants.FONT_CAPTION)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(ColorConstants.COLOR_ZHU)
+              Blank()
 
-            if (this.selectedIngredients.length > 0) {
-              Text(' · 清空')
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(ColorConstants.COLOR_BO)
-                .onClick(() => {
-                  this.clearSelectedIngredients();
-                })
+              Row() {
+                Text(`已选 ${this.selectedIngredients.length} 样`)
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(Color.White)
+                  .backgroundColor('rgba(158, 43, 37, 0.85)')
+                  .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                  .borderRadius(StyleConstants.RADIUS_PILL)
+
+                if (this.selectedIngredients.length > 0) {
+                  Text(' · 清空')
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor('rgba(255, 255, 255, 0.90)')
+                    .margin({ left: 4 })
+                    .onClick(() => {
+                      this.clearSelectedIngredients();
+                    })
+                }
+              }
             }
-          }
-        }
-        .width('100%')
-        .padding({ left: 16, right: 16, top: this.topSafeHeight + 12, bottom: 8 })
+            .width('100%')
+            .padding({ left: 16, right: 16, top: this.topSafeHeight + 10, bottom: 10 })
+            .backgroundColor('rgba(68, 24, 20, 0.52)')
+            .margin({ bottom: 8 })
 
-        // 步骤 ①：选择食材（双来源：固定食材库 vs 我的冰箱）
-        Column() {
+            // 步骤 ①：选择食材（双来源：固定食材库 vs 我的冰箱）白色高质感磨砂卡片
+            Column() {
           // 食材来源切换 Segment
           Row() {
             Button({ type: ButtonType.Normal }) {
@@ -532,13 +547,38 @@ export struct RecipeListPage {
         }
         .width('100%')
         .padding(StyleConstants.SPACE_MD)
-        .backgroundColor(ColorConstants.COLOR_PAPER)
+        .backgroundColor('rgba(255, 255, 255, 0.95)')
         .borderRadius(StyleConstants.RADIUS_LG)
-        .border({
-          width: 1,
-          color: ColorConstants.COLOR_DIVIDER
+        .shadow({
+          radius: 12,
+          color: 'rgba(0, 0, 0, 0.06)',
+          offsetX: 0,
+          offsetY: 3
         })
-        .margin({ left: 16, right: 16, bottom: 10 })
+        .margin({ left: 16, right: 16 })
+      }
+      .width('100%')
+      .backgroundImage($rawfile('image/03_shipu.jpg'), ImageRepeat.NoRepeat)
+      .backgroundImageSize(ImageSize.Cover)
+      .backgroundImagePosition(Alignment.Top)
+      .padding({ bottom: 12 })
+
+      // 底部自然羽化过渡层，融入下方的宣纸底色
+      Row()
+        .width('100%')
+        .height(36)
+        .linearGradient({
+          angle: 180,
+          colors: [
+            ['rgba(247, 243, 234, 0.0)', 0.0],
+            ['rgba(247, 243, 234, 0.75)', 0.6],
+            [ColorConstants.COLOR_XUAN, 1.0]
+          ]
+        })
+        .hitTestBehavior(HitTestMode.None)
+    }
+    .width('100%')
+    .margin({ bottom: 10 })
 
         // 步骤 ②：选厨具
         Column() {
