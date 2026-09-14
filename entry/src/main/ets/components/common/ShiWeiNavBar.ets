@@ -72,7 +72,7 @@ export struct ShiWeiNavBar {
     }
     .width('100%')
     .height(52 + this.topSafeHeight)
-    .backgroundColor(ColorConstants.COLOR_XUAN)
+    .backgroundColor(Color.Transparent)
     .padding({ left: 8, right: 8, top: this.topSafeHeight })
     .border({
       width: { bottom: 1 },

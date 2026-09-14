@@ -140,11 +140,11 @@ struct CookingModePage {
 
   build() {
     Stack() {
-      // 沉浸「墨色夜话」深色背景
+      // 沉浸「墨色夜话」半透深色蒙层（映衬宣纸底纹）
       Column()
         .width('100%')
         .height('100%')
-        .backgroundColor(ColorConstants.COLOR_DARK_BG)
+        .backgroundColor('rgba(26, 26, 26, 0.82)')
 
       if (this.recipe) {
         Column() {
@@ -395,6 +395,10 @@ struct CookingModePage {
     }
     .width('100%')
     .height('100%')
+    .backgroundColor(ColorConstants.COLOR_XUAN)
+    .backgroundImage($rawfile('image/img_background.png'), ImageRepeat.NoRepeat)
+    .backgroundImageSize(ImageSize.Cover)
+    .backgroundImagePosition(Alignment.Center)
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 
