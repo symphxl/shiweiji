@@ -26,8 +26,8 @@ export class StyleConstants {
   static readonly FONT_H3: number = 16;      // 二级标题、卡片头
   static readonly FONT_BODY: number = 14.5;  // 正文
   static readonly FONT_BODY_SM: number = 13; // 次级正文
-  static readonly FONT_CAPTION: number = 11; // 说明与标签
-  static readonly FONT_BADGE: number = 9.5;  // 徽章与极小标签
+  static readonly FONT_CAPTION: number = 12; // 说明与标签
+  static readonly FONT_BADGE: number = 12;  // 徽章与极小标签
   static readonly FONT_TIMER: number = 44;   // 烹饪计时大字
 
   // 动效规范

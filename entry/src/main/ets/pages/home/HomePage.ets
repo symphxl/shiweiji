@@ -17,6 +17,7 @@ import promptAction from '@ohos.promptAction';
 export struct HomePage {
   onSwitchToRecipeTab?: () => void;
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
+  @StorageProp('bottomSafeHeight') bottomSafeHeight: number = 20;
   @StorageProp('userNickname') @Watch('onProfileChanged') userNickname: string = '';
   @StorageLink('inventoryVersion') @Watch('onInventoryChanged') inventoryVersion: number = 0;
   @StorageLink('recipeVersion') @Watch('onRecipeVersionChanged') recipeVersion: number = 0;
@@ -435,7 +436,7 @@ export struct HomePage {
                 .fontWeight(FontWeight.Bold)
                 .fontColor(ColorConstants.COLOR_INK)
               Text('三菜一汤')
-                .fontSize(10)
+                .fontSize(12)
                 .fontWeight(FontWeight.Medium)
                 .fontColor(ColorConstants.COLOR_ZHU)
                 .backgroundColor('rgba(158, 43, 37, 0.08)')
@@ -555,11 +556,12 @@ export struct HomePage {
           })
         }
         .width('100%')
-        .padding({ left: 16, right: 16, bottom: 30 })
+        .padding({ left: 16, right: 16, bottom: 80 + this.bottomSafeHeight })
       }
       .width('100%')
     }
     .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Spring)
     .width('100%')
     .height('100%')
     .backgroundColor(Color.Transparent)
@@ -733,7 +735,12 @@ export struct HomePage {
         .width('100%')
         .backgroundColor(ColorConstants.COLOR_PAPER)
         .borderRadius({ topLeft: StyleConstants.RADIUS_XL, topRight: StyleConstants.RADIUS_XL })
-        .padding(StyleConstants.SPACE_LG)
+        .padding({
+          left: StyleConstants.SPACE_LG,
+          right: StyleConstants.SPACE_LG,
+          top: StyleConstants.SPACE_LG,
+          bottom: StyleConstants.SPACE_LG + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 20)
+        })
         .shadow({
           radius: 16,
           color: 'rgba(0, 0, 0, 0.20)',

@@ -267,6 +267,7 @@ export struct DietWikiPage {
           }
           .scrollable(ScrollDirection.Horizontal)
           .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.Spring)
           .width('100%')
           .margin({ bottom: 10 })
 
@@ -353,6 +354,7 @@ export struct DietWikiPage {
       .width('100%')
     }
     .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Spring)
     .width('100%')
     .height('100%')
     .backgroundColor(Color.Transparent)

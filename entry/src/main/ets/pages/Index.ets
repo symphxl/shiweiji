@@ -88,11 +88,11 @@ struct Index {
         this.currentTabIndex = index;
       })
       .backgroundColor(Color.Transparent)
-      .barBackgroundColor(ColorConstants.COLOR_PAPER)
+      .barBackgroundColor(ColorConstants.COLOR_XUAN)
       .barHeight(56 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 0))
       .barMode(BarMode.Fixed)
       .border({
-        width: { top: 1 },
+        width: { top: 0.5 },
         color: ColorConstants.COLOR_DIVIDER
       })
     }

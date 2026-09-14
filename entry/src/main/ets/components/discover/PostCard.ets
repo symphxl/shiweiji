@@ -48,7 +48,7 @@ export struct PostCard {
 
             if (this.post.authorTag) {
               Text(this.post.authorTag)
-                .fontSize(8.5)
+                .fontSize(12)
                 .fontColor(ColorConstants.COLOR_CHA)
                 .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
                 .borderRadius(StyleConstants.RADIUS_SM)

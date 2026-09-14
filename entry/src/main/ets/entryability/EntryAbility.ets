@@ -31,6 +31,7 @@ export default class EntryAbility extends UIAbility {
         return;
       }
       windowClass = data;
+      AppStorage.setOrCreate('mainWindow', windowClass);
       // 开启沉浸式全屏布局与透明状态栏
       try {
         windowClass.setWindowLayoutFullScreen(true);

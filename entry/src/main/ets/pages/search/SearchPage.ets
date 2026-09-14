@@ -331,11 +331,19 @@ struct SearchPage {
         .width('100%')
       }
       .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
       .layoutWeight(1)
     }
     .width('100%')
     .height('100%')
     .backgroundColor(ColorConstants.COLOR_XUAN)
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
+  }
+
+  pageTransition() {
+    PageTransitionEnter({ duration: 350, curve: Curve.EaseOut })
+      .opacity(0)
+    PageTransitionExit({ duration: 250, curve: Curve.EaseIn })
+      .opacity(0)
   }
 }

@@ -156,6 +156,7 @@ struct CreatePostPage {
             }
             .scrollable(ScrollDirection.Horizontal)
             .scrollBar(BarState.Off)
+            .edgeEffect(EdgeEffect.Spring)
             .width('100%')
           }
           .width('100%')
@@ -208,5 +209,12 @@ struct CreatePostPage {
     .width('100%')
     .height('100%')
     .backgroundColor(ColorConstants.COLOR_XUAN)
+  }
+
+  pageTransition() {
+    PageTransitionEnter({ duration: 350, curve: Curve.EaseOut })
+      .opacity(0)
+    PageTransitionExit({ duration: 250, curve: Curve.EaseIn })
+      .opacity(0)
   }
 }

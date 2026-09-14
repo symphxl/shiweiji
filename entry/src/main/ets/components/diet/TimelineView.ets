@@ -31,7 +31,7 @@ export struct TimelineView {
                 .fontColor(this.selectedIndex === index ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_SUMI)
 
               Text(era.stapleFood.split('、')[0])
-                .fontSize(9)
+                .fontSize(12)
                 .fontColor(ColorConstants.COLOR_BO)
                 .maxLines(1)
                 .margin({ top: 2 })
@@ -52,6 +52,7 @@ export struct TimelineView {
       }
       .scrollable(ScrollDirection.Horizontal)
       .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
       .width('100%')
       .margin({ bottom: StyleConstants.SPACE_MD })
 

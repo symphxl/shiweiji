@@ -1,5 +1,6 @@
 import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
+import { window } from '@kit.ArkUI';
 import { ColorConstants } from '../../common/constants/ColorConstants';
 import { StyleConstants } from '../../common/constants/StyleConstants';
 import { RecipeItem, RecipeIngredient, CookingStepItem } from '../../common/models/RecipeModel';
@@ -21,6 +22,15 @@ struct RecipeDetailPage {
   @State isCollected: boolean = false;
 
   aboutToAppear() {
+    try {
+      const mainWindow = AppStorage.get<window.Window>('mainWindow');
+      if (mainWindow) {
+        mainWindow.setWindowSystemBarProperties({
+          statusBarContentColor: '#FFFFFF'
+        });
+      }
+    } catch (e) {}
+
     const params = router.getParams() as Record<string, Object>;
     const id = (params && params['recipeId']) ? (params['recipeId'] as string) : 'rec_001';
     const found = this.state.recipes.find(r => r.id === id);
@@ -29,6 +39,17 @@ struct RecipeDetailPage {
       this.currentServings = this.recipe.servings;
       this.isCollected = this.state.isRecipeCollected(this.recipe.id);
     }
+  }
+
+  aboutToDisappear() {
+    try {
+      const mainWindow = AppStorage.get<window.Window>('mainWindow');
+      if (mainWindow) {
+        mainWindow.setWindowSystemBarProperties({
+          statusBarContentColor: '#1A1817'
+        });
+      }
+    } catch (e) {}
   }
 
   // 动态根据选定份量计算食材用量
@@ -298,7 +319,7 @@ struct RecipeDetailPage {
 
                     if (!ing.isRequired) {
                       Text('可选')
-                        .fontSize(8.5)
+                        .fontSize(12)
                         .fontColor(ColorConstants.COLOR_BO)
                         .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
                         .borderRadius(StyleConstants.RADIUS_SM)
@@ -354,11 +375,12 @@ struct RecipeDetailPage {
                 color: ColorConstants.COLOR_DIVIDER
               })
               .padding(StyleConstants.SPACE_MD)
-              .margin({ bottom: 90 }) // 留出底部操作栏高度
+              .margin({ bottom: 100 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 20) }) // 留出底部操作栏高度并避让安全区
             }
             .width('100%')
           }
           .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.Spring)
           .width('100%')
           .height('100%')
 
@@ -406,7 +428,7 @@ struct RecipeDetailPage {
               })
           }
           .width('100%')
-          .height(60 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 0))
+          .height(60 + (this.bottomSafeHeight > 0 ? this.bottomSafeHeight : 20))
           .backgroundColor(ColorConstants.COLOR_PAPER)
           .border({
             width: { top: 1 },
@@ -416,7 +438,7 @@ struct RecipeDetailPage {
             left: 16,
             right: 16,
             top: 8,
-            bottom: this.bottomSafeHeight > 0 ? this.bottomSafeHeight * 0.6 + 8 : 8
+            bottom: this.bottomSafeHeight > 0 ? this.bottomSafeHeight + 8 : 16
           })
         }
         .width('100%')
@@ -427,5 +449,12 @@ struct RecipeDetailPage {
     .height('100%')
     .backgroundColor(ColorConstants.COLOR_XUAN)
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
+  }
+
+  pageTransition() {
+    PageTransitionEnter({ duration: 350, curve: Curve.EaseOut })
+      .opacity(0)
+    PageTransitionExit({ duration: 250, curve: Curve.EaseIn })
+      .opacity(0)
   }
 }

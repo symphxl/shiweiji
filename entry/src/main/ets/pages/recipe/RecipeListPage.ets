@@ -441,7 +441,7 @@ export struct RecipeListPage {
               Row() {
                 ForEach(COOK_CATEGORIES, (cat: string) => {
                   Text(cat)
-                    .fontSize(11)
+                    .fontSize(12)
                     .fontWeight(this.repoCategoryTab === cat ? FontWeight.Bold : FontWeight.Normal)
                     .fontColor(this.repoCategoryTab === cat ? ColorConstants.COLOR_ZHU : ColorConstants.COLOR_SUMI)
                     .backgroundColor(this.repoCategoryTab === cat ? 'rgba(158, 43, 37, 0.12)' : Color.Transparent)
@@ -456,6 +456,7 @@ export struct RecipeListPage {
             }
             .scrollable(ScrollDirection.Horizontal)
             .scrollBar(BarState.Off)
+            .edgeEffect(EdgeEffect.Spring)
             .width('100%')
             .margin({ bottom: 10 })
           }
@@ -558,7 +559,7 @@ export struct RecipeListPage {
               }
 
               Text('食材名固定不可修改；新增时按「双向包含」查重（已有「米」则「米饭」不可再加）')
-                .fontSize(9)
+                .fontSize(12)
                 .fontColor(ColorConstants.COLOR_BO)
                 .margin({ top: 6 })
             }
@@ -640,7 +641,7 @@ export struct RecipeListPage {
             Text(this.filterMode === FILTER_MODE_STRICT
               ? '精确匹配 · 所选这几样就够做，不欠料、无需额外采购'
               : '模糊匹配 · 菜谱包含所选食材，可能还需要其他配料')
-              .fontSize(9)
+              .fontSize(12)
               .fontColor(ColorConstants.COLOR_BO)
               .width('100%')
               .margin({ bottom: 10 })
@@ -649,7 +650,7 @@ export struct RecipeListPage {
               Row() {
                 ForEach(['全部', '简单', '普通', '困难', '复杂'], (lv: string) => {
                   Text(lv)
-                    .fontSize(11)
+                    .fontSize(12)
                     .fontWeight(this.filterDifficultyLabel() === lv ? FontWeight.Bold : FontWeight.Normal)
                     .fontColor(this.filterDifficultyLabel() === lv ? ColorConstants.COLOR_PAPER : ColorConstants.COLOR_SUMI)
                     .backgroundColor(this.filterDifficultyLabel() === lv ? ColorConstants.COLOR_QING : ColorConstants.COLOR_SHENGCHENG)
@@ -665,6 +666,7 @@ export struct RecipeListPage {
             }
             .scrollable(ScrollDirection.Horizontal)
             .scrollBar(BarState.Off)
+            .edgeEffect(EdgeEffect.Spring)
             .width('100%')
           }
           .width('100%')
@@ -729,6 +731,7 @@ export struct RecipeListPage {
           }
           .scrollable(ScrollDirection.Horizontal)
           .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.Spring)
           .width('100%')
           .padding({ left: 16, right: 16, bottom: 10 })
         }
@@ -854,6 +857,7 @@ export struct RecipeListPage {
       .width('100%')
     }
     .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Spring)
     .width('100%')
     .height('100%')
     .backgroundColor(Color.Transparent)

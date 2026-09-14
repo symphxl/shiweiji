@@ -99,6 +99,7 @@ export struct DiscoverPage {
       .width('100%')
     }
     .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Spring)
     .width('100%')
     .height('100%')
     .backgroundColor(ColorConstants.COLOR_XUAN)

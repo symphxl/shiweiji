@@ -35,7 +35,7 @@ export struct RecipeCard {
             .fontSize(22)
 
           Text(this.recipe.name)
-            .fontSize(7)
+            .fontSize(12)
             .fontColor(Color.White)
             .position({ x: 4, y: 42 })
         }
@@ -72,7 +72,7 @@ export struct RecipeCard {
 
           if (this.missingText.length > 0) {
             Text(this.missingText)
-              .fontSize(8.5)
+              .fontSize(12)
               .fontColor(ColorConstants.COLOR_WARNING)
               .margin({ bottom: 2 })
           }
@@ -81,7 +81,7 @@ export struct RecipeCard {
           Row() {
             ForEach(this.recipe.tags.slice(0, 3), (tag: string) => {
               Text(tag)
-                .fontSize(8.5)
+                .fontSize(12)
                 .fontColor(ColorConstants.COLOR_CHA)
                 .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
                 .borderRadius(StyleConstants.RADIUS_PILL)

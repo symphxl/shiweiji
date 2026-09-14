@@ -188,7 +188,7 @@ struct FridgePage {
                         .fontColor(item.daysRemaining <= 0 ? ColorConstants.COLOR_ERROR : ColorConstants.COLOR_INK)
 
                       Text(item.category)
-                        .fontSize(8.5)
+                        .fontSize(12)
                         .fontColor(ColorConstants.COLOR_CHA)
                         .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
                         .borderRadius(StyleConstants.RADIUS_SM)
@@ -197,7 +197,7 @@ struct FridgePage {
 
                       if (item.daysRemaining <= 0) {
                         Text('已过期')
-                          .fontSize(8.5)
+                          .fontSize(12)
                           .fontWeight(FontWeight.Bold)
                           .fontColor(Color.White)
                           .backgroundColor(ColorConstants.COLOR_ERROR)
@@ -220,7 +220,7 @@ struct FridgePage {
                   Row() {
                     Button({ type: ButtonType.Circle }) {
                       Text('➖')
-                        .fontSize(11)
+                        .fontSize(12)
                     }
                     .width(28)
                     .height(28)
@@ -238,7 +238,7 @@ struct FridgePage {
 
                     Button({ type: ButtonType.Circle }) {
                       Text('➕')
-                        .fontSize(11)
+                        .fontSize(12)
                     }
                     .width(28)
                     .height(28)
@@ -266,6 +266,7 @@ struct FridgePage {
           .padding(StyleConstants.SPACE_MD)
         }
         .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.Spring)
         .layoutWeight(1)
       }
       .width('100%')
@@ -402,5 +403,12 @@ struct FridgePage {
     }
     .width('100%')
     .height('100%')
+  }
+
+  pageTransition() {
+    PageTransitionEnter({ duration: 350, curve: Curve.EaseOut })
+      .opacity(0)
+    PageTransitionExit({ duration: 250, curve: Curve.EaseIn })
+      .opacity(0)
   }
 }

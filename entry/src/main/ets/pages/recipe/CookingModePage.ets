@@ -1,5 +1,6 @@
 import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
+import { window } from '@kit.ArkUI';
 import { ColorConstants } from '../../common/constants/ColorConstants';
 import { StyleConstants } from '../../common/constants/StyleConstants';
 import { RecipeItem, CookingStepItem } from '../../common/models/RecipeModel';
@@ -25,6 +26,15 @@ struct CookingModePage {
   private timerId: number = -1;
 
   aboutToAppear() {
+    try {
+      const mainWindow = AppStorage.get<window.Window>('mainWindow');
+      if (mainWindow) {
+        mainWindow.setWindowSystemBarProperties({
+          statusBarContentColor: '#FFFFFF'
+        });
+      }
+    } catch (e) {}
+
     const params = router.getParams() as Record<string, Object>;
     const id = (params && params['recipeId']) ? (params['recipeId'] as string) : 'rec_001';
     const found = this.state.recipes.find(r => r.id === id);
@@ -33,6 +43,14 @@ struct CookingModePage {
   }
 
   aboutToDisappear() {
+    try {
+      const mainWindow = AppStorage.get<window.Window>('mainWindow');
+      if (mainWindow) {
+        mainWindow.setWindowSystemBarProperties({
+          statusBarContentColor: '#1A1817'
+        });
+      }
+    } catch (e) {}
     this.stopTimer();
   }
 
@@ -378,5 +396,12 @@ struct CookingModePage {
     .width('100%')
     .height('100%')
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
+  }
+
+  pageTransition() {
+    PageTransitionEnter({ duration: 350, curve: Curve.EaseOut })
+      .opacity(0)
+    PageTransitionExit({ duration: 250, curve: Curve.EaseIn })
+      .opacity(0)
   }
 }
