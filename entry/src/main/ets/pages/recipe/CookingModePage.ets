@@ -224,14 +224,7 @@ struct CookingModePage {
                   .fontColor(this.isSpeaking ? ColorConstants.COLOR_DARK_PRIMARY : ColorConstants.COLOR_DARK_ACCENT)
               }
             }
-            .height(34)
-            .padding({ left: 10, right: 10 })
-            .backgroundColor(this.isSpeaking ? 'rgba(192, 90, 80, 0.25)' : 'rgba(255, 255, 255, 0.08)')
-            .borderRadius(StyleConstants.RADIUS_PILL)
-            .border({
-              width: 1,
-              color: this.isSpeaking ? ColorConstants.COLOR_DARK_PRIMARY : 'rgba(200, 155, 60, 0.35)'
-            })
+            .backgroundColor(Color.Transparent)
             .onClick(() => {
               this.toggleVoice();
             })
