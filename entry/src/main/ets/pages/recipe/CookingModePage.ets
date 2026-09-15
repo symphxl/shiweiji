@@ -7,6 +7,7 @@ import { RecipeItem, CookingStepItem } from '../../common/models/RecipeModel';
 import { AppDataState } from '../../common/services/AppDataState';
 import { DateUtil } from '../../common/utils/DateUtil';
 import { ShiWeiSeal } from '../../components/common/ShiWeiSeal';
+import { TtsService, TtsStateListener } from '../../common/services/TtsService';
 
 /**
  * 拾味记 · 全屏沉浸烹饪模式 (Cooking Mode)
@@ -17,13 +18,21 @@ import { ShiWeiSeal } from '../../components/common/ShiWeiSeal';
 struct CookingModePage {
   @StorageProp('topSafeHeight') topSafeHeight: number = 38;
   @StorageProp('bottomSafeHeight') bottomSafeHeight: number = 20;
+  @StorageProp('isTablet') isTablet: boolean = false;
   @State private state: AppDataState = AppDataState.getInstance();
   @State recipe: RecipeItem | null = null;
   @State currentStepIndex: number = 0;
   @State isTiming: boolean = false;
   @State remainingSeconds: number = 0;
   @State isFinished: boolean = false;
+  @State isSpeaking: boolean = false;
+  @State spokenText: string = '';
   private timerId: number = -1;
+  private ttsService: TtsService = TtsService.getInstance();
+  private ttsListener: TtsStateListener = (isSpeaking: boolean, text: string) => {
+    this.isSpeaking = isSpeaking;
+    this.spokenText = text;
+  };
 
   aboutToAppear() {
     try {
@@ -40,6 +49,10 @@ struct CookingModePage {
     const found = this.state.recipes.find(r => r.id === id);
     this.recipe = found ? found : this.state.recipes[0];
     this.resetStepTimer();
+
+    // 绑定语音播报监听并初始化引擎
+    this.ttsService.addStateListener(this.ttsListener);
+    this.ttsService.initEngine();
   }
 
   aboutToDisappear() {
@@ -52,6 +65,8 @@ struct CookingModePage {
       }
     } catch (e) {}
     this.stopTimer();
+    this.ttsService.removeStateListener(this.ttsListener);
+    this.ttsService.stop();
   }
 
   currentStep(): CookingStepItem | null {
@@ -111,6 +126,7 @@ struct CookingModePage {
     if (!this.recipe) {
       return;
     }
+    this.ttsService.stop();
     if (this.currentStepIndex < this.recipe.steps.length - 1) {
       this.currentStepIndex++;
       this.resetStepTimer();
@@ -123,19 +139,38 @@ struct CookingModePage {
   }
 
   prevStep() {
+    this.ttsService.stop();
     if (this.currentStepIndex > 0) {
       this.currentStepIndex--;
       this.resetStepTimer();
     }
   }
 
-  simulateVoice() {
-    const step = this.currentStep();
-    if (step) {
-      promptAction.showToast({
-        message: `🎙 [语音播报] 第 ${step.stepNumber} 步，${step.title}。${step.description}`
-      });
+  toggleVoice() {
+    if (this.isSpeaking) {
+      this.ttsService.stop();
+      promptAction.showToast({ message: '⏹ 已暂停语音播报' });
+    } else {
+      this.speakCurrentStep();
     }
+  }
+
+  speakCurrentStep() {
+    const step = this.currentStep();
+    if (!step) {
+      return;
+    }
+    let heat = '';
+    if (step.heatLevel && step.heatLevel.trim().length > 0) {
+      heat = `建议使用${step.heatLevel}火候。`;
+    }
+    let tip = '';
+    if (step.tip && step.tip.trim().length > 0) {
+      tip = `温馨提示：${step.tip}。`;
+    }
+    const speech = `第 ${step.stepNumber} 步，${step.title}。${heat}${step.description}。${tip}`;
+    this.ttsService.speak(speech);
+    promptAction.showToast({ message: `🎙 正在播报第 ${step.stepNumber} 步` });
   }
 
   build() {
@@ -171,13 +206,25 @@ struct CookingModePage {
             Blank()
 
             Button({ type: ButtonType.Normal }) {
-              Text('🎙 播报')
-                .fontSize(StyleConstants.FONT_BODY_SM)
-                .fontColor(ColorConstants.COLOR_DARK_ACCENT)
+              Row({ space: 4 }) {
+                Text(this.isSpeaking ? '⏹' : '🎙')
+                  .fontSize(14)
+                Text(this.isSpeaking ? '停止播报' : '语音播报')
+                  .fontSize(StyleConstants.FONT_BODY_SM)
+                  .fontWeight(this.isSpeaking ? FontWeight.Bold : FontWeight.Normal)
+                  .fontColor(this.isSpeaking ? ColorConstants.COLOR_DARK_PRIMARY : ColorConstants.COLOR_DARK_ACCENT)
+              }
             }
-            .backgroundColor(Color.Transparent)
+            .height(34)
+            .padding({ left: 10, right: 10 })
+            .backgroundColor(this.isSpeaking ? 'rgba(192, 90, 80, 0.25)' : 'rgba(255, 255, 255, 0.08)')
+            .borderRadius(StyleConstants.RADIUS_PILL)
+            .border({
+              width: 1,
+              color: this.isSpeaking ? ColorConstants.COLOR_DARK_PRIMARY : 'rgba(200, 155, 60, 0.35)'
+            })
             .onClick(() => {
-              this.simulateVoice();
+              this.toggleVoice();
             })
           }
           .width('100%')
@@ -187,6 +234,22 @@ struct CookingModePage {
           if (this.currentStep()) {
             Column() {
               Blank()
+
+              if (this.isSpeaking) {
+                Row({ space: 6 }) {
+                  Text('🔊 正在语音指引播报中...')
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_DARK_ACCENT)
+
+                  Text('（轻触右上角可停止）')
+                    .fontSize(11)
+                    .fontColor(ColorConstants.COLOR_DARK_SUMI)
+                }
+                .padding({ left: 14, right: 14, top: 4, bottom: 4 })
+                .backgroundColor('rgba(200, 155, 60, 0.16)')
+                .borderRadius(StyleConstants.RADIUS_PILL)
+                .margin({ bottom: 12 })
+              }
 
               // 菜名与动作
               Text(this.recipe.name)
@@ -314,6 +377,7 @@ struct CookingModePage {
           }
         }
         .width('100%')
+        .constraintSize({ maxWidth: this.isTablet ? 780 : '100%' })
         .height('100%')
       }
 
