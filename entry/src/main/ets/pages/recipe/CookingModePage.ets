@@ -169,8 +169,17 @@ struct CookingModePage {
       tip = `温馨提示：${step.tip}。`;
     }
     const speech = `第 ${step.stepNumber} 步，${step.title}。${heat}${step.description}。${tip}`;
+    const hasEngine = this.ttsService.hasEngine();
     this.ttsService.speak(speech);
-    promptAction.showToast({ message: `🎙 正在播报第 ${step.stepNumber} 步` });
+    if (!hasEngine) {
+      promptAction.showToast({
+        message: '💡 模拟器无音频声卡与语音包，真机安装后即可听到清晰真人发声'
+      });
+    } else {
+      promptAction.showToast({
+        message: `🎙 正在播报第 ${step.stepNumber} 步`
+      });
+    }
   }
 
   build() {

@@ -52,6 +52,10 @@ export class TtsService {
     return this.isSpeakingInternal;
   }
 
+  public hasEngine(): boolean {
+    return this.engine !== null;
+  }
+
   public getCurrentText(): string {
     return this.currentSpokenText;
   }
