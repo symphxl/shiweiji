@@ -32,6 +32,8 @@ export struct RecipeListPage {
   @StorageProp('inventoryVersion') inventoryVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
   @State selectedIngredients: string[] = [];
+  @State repoSelectedIngredients: string[] = [];
+  @State fridgeSelectedIngredients: string[] = [];
   @State selectedCookware: string[] = [];
   @State activeMode: string = CommonConstants.MODE_STRICT;
   @State activeCategoryTab: string = '全部';
@@ -190,11 +192,22 @@ export struct RecipeListPage {
   }
 
   toggleIngredient(name: string) {
-    const idx = this.selectedIngredients.indexOf(name);
-    if (idx >= 0) {
-      this.selectedIngredients.splice(idx, 1);
+    if (this.ingredientSource === 'repository') {
+      const idx = this.repoSelectedIngredients.indexOf(name);
+      if (idx >= 0) {
+        this.repoSelectedIngredients.splice(idx, 1);
+      } else {
+        this.repoSelectedIngredients.push(name);
+      }
+      this.selectedIngredients = [...this.repoSelectedIngredients];
     } else {
-      this.selectedIngredients.push(name);
+      const idx = this.fridgeSelectedIngredients.indexOf(name);
+      if (idx >= 0) {
+        this.fridgeSelectedIngredients.splice(idx, 1);
+      } else {
+        this.fridgeSelectedIngredients.push(name);
+      }
+      this.selectedIngredients = [...this.fridgeSelectedIngredients];
     }
     this.calculateMatches();
   }
@@ -209,8 +222,13 @@ export struct RecipeListPage {
     this.calculateMatches();
   }
 
-  // 清空已选食材
+  // 清空已选食材（按当前食材来源分别清空）
   clearSelectedIngredients() {
+    if (this.ingredientSource === 'repository') {
+      this.repoSelectedIngredients = [];
+    } else {
+      this.fridgeSelectedIngredients = [];
+    }
     this.selectedIngredients = [];
     this.calculateMatches();
   }
@@ -271,6 +289,10 @@ export struct RecipeListPage {
         fontColor: ColorConstants.COLOR_ZHU,
         action: () => {
           this.state.clearCustomIngredients();
+          this.repoSelectedIngredients = [];
+          if (this.ingredientSource === 'repository') {
+            this.selectedIngredients = [];
+          }
           this.addIngredientMsg = `已恢复初始固定食材库（共 ${COOK_INGREDIENTS.length} 种经典食材）`;
           this.addIngredientMsgIsError = false;
           this.buildIngredientMeta();
@@ -394,6 +416,7 @@ export struct RecipeListPage {
             .borderRadius(StyleConstants.RADIUS_SM)
             .onClick(() => {
               this.ingredientSource = 'repository';
+              this.selectedIngredients = [...this.repoSelectedIngredients];
               this.calculateMatches();
             })
 
@@ -411,6 +434,7 @@ export struct RecipeListPage {
             .borderRadius(StyleConstants.RADIUS_SM)
             .onClick(() => {
               this.ingredientSource = 'fridge';
+              this.selectedIngredients = [...this.fridgeSelectedIngredients];
               this.calculateMatches();
             })
           }
@@ -489,7 +513,7 @@ export struct RecipeListPage {
           // 食材 Chip 容器（支持省略号...展开/收起）
           if (this.getAllCandidateIngredients().length === 0) {
             Row() {
-              Text(this.ingredientSource === 'fridge' ? '您的冰箱空空如也，感觉保存点食材进去吧~' : (this.ingredientSearchKey.trim().length > 0 ? `未找到与 "${this.ingredientSearchKey}" 相关的食材` : '暂无可选食材'))
+              Text(this.ingredientSource === 'fridge' ? '您的冰箱空空如也，赶紧保存点食材进去吧~' : (this.ingredientSearchKey.trim().length > 0 ? `未找到与 "${this.ingredientSearchKey}" 相关的食材` : '暂无可选食材'))
                 .fontSize(StyleConstants.FONT_CAPTION)
                 .fontColor(ColorConstants.COLOR_BO)
                 .padding({ top: 12, bottom: 12 })
@@ -784,7 +808,8 @@ export struct RecipeListPage {
                 desc: '从上方固定食材库点选食材，菜谱将按「包含所选食材」实时筛选',
                 buttonText: '试试：腊肠 + 米',
                 onButtonClick: () => {
-                  this.selectedIngredients = ['腊肠', '米'];
+                  this.repoSelectedIngredients = ['腊肠', '米'];
+                  this.selectedIngredients = [...this.repoSelectedIngredients];
                   this.selectedCookware = [];
                   this.filterMode = FILTER_MODE_STRICT;
                   this.filterDifficulty = '';
@@ -857,7 +882,7 @@ export struct RecipeListPage {
               if (this.state.inventory.filter(item => item.quantity > 0).length === 0) {
                 EmptyStateView({
                   icon: '🧊',
-                  title: '您的冰箱空空如也，感觉保存点食材进去吧~',
+                  title: '您的冰箱空空如也，赶紧保存点食材进去吧~',
                   desc: '在首页或「我的冰箱」中录入食材后，即可在这里智能匹配三餐食谱'
                 })
               } else {
@@ -867,7 +892,8 @@ export struct RecipeListPage {
                   desc: '从上方勾选冰箱现有食材与厨具，系统将按三档模式自动匹配可做菜肴',
                   buttonText: '勾选冰箱全部食材',
                   onButtonClick: () => {
-                    this.selectedIngredients = this.state.inventory.filter(item => item.quantity > 0).map(item => item.name);
+                    this.fridgeSelectedIngredients = this.state.inventory.filter(item => item.quantity > 0).map(item => item.name);
+                    this.selectedIngredients = [...this.fridgeSelectedIngredients];
                     this.calculateMatches();
                   }
                 })
@@ -879,7 +905,8 @@ export struct RecipeListPage {
                 desc: '试试勾选更多食材，或切换为「模糊匹配」查看近邻菜谱',
                 buttonText: '换一组推荐食材（土豆、茄子、青椒）',
                 onButtonClick: () => {
-                  this.selectedIngredients = ['土豆', '茄子', '青椒'];
+                  this.fridgeSelectedIngredients = ['土豆', '茄子', '青椒'];
+                  this.selectedIngredients = [...this.fridgeSelectedIngredients];
                   this.activeMode = CommonConstants.MODE_STRICT;
                   this.calculateMatches();
                 }

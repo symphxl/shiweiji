@@ -387,7 +387,7 @@ export struct HomePage {
                 Row({ space: 8 }) {
                   Text('🧊')
                     .fontSize(22)
-                  Text('您的冰箱空空如也，感觉保存点食材进去吧~')
+                  Text('您的冰箱空空如也，赶紧保存点食材进去吧~')
                     .fontSize(StyleConstants.FONT_CAPTION)
                     .fontColor(ColorConstants.COLOR_BO)
                     .layoutWeight(1)
@@ -486,7 +486,7 @@ export struct HomePage {
             .margin({ top: 12, bottom: 12 })
             .onClick(() => {
               if (this.state.inventory.filter(item => item.quantity > 0).length === 0) {
-                promptAction.showToast({ message: '您的冰箱空空如也，感觉保存点食材进去吧~' });
+                promptAction.showToast({ message: '您的冰箱空空如也，赶紧保存点食材进去吧~' });
                 return;
               }
               if (this.onSwitchToRecipeTab) {

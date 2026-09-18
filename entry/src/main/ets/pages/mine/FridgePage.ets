@@ -225,7 +225,7 @@ struct FridgePage {
               Column() {
                 EmptyStateView({
                   icon: '🧊',
-                  title: '您的冰箱空空如也，感觉保存点食材进去吧~',
+                  title: '您的冰箱空空如也，赶紧保存点食材进去吧~',
                   desc: '记录常备食材与保质期，智能规划三餐，避免遗忘变质'
                 })
 
@@ -373,7 +373,7 @@ struct FridgePage {
         .borderRadius(StyleConstants.RADIUS_MD)
         .onClick(() => {
           if (this.state.inventory.filter(item => item.quantity > 0).length === 0) {
-            promptAction.showToast({ message: '您的冰箱空空如也，感觉保存点食材进去吧~' });
+            promptAction.showToast({ message: '您的冰箱空空如也，赶紧保存点食材进去吧~' });
             return;
           }
           router.back();

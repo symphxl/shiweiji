@@ -166,7 +166,7 @@ export class MockDataService {
           }
         ],
         requiredCookware: ['炒锅'],
-        isFamilyRecipe: true,
+        isFamilyRecipe: false,
         likeCount: 3410,
         collectCount: 1980
       },

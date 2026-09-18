@@ -28,7 +28,7 @@ export class AppDataState {
   inventory: InventoryItem[] = [];
   shoppingList: ShoppingListItem[] = [];
   posts: PostItem[] = [];
-  collectedRecipeIds: string[] = ['rec_001', 'rec_002'];
+  collectedRecipeIds: string[] = [];
   // 「固定食材库」中用户手动新增的食材（内置食材固定不可改，新增项持久化到应用沙箱）
   customIngredients: string[] = [];
   dietLogs: DietLogEntry[] = [];
@@ -207,14 +207,21 @@ export class AppDataState {
     if (!context) {
       return;
     }
+    this.context = context;
     try {
       const saved = WishlistStore.restore(context);
       if (saved !== null && Array.isArray(saved)) {
         this.collectedRecipeIds = saved;
-        this.userProfile.collectCount = saved.length;
-        this.wishlistVersion += 1;
-        AppStorage.setOrCreate('wishlistVersion', this.wishlistVersion);
+      } else {
+        // 首次安装，想做的菜默认为空
+        this.collectedRecipeIds = [];
+        WishlistStore.save(context, []);
       }
+      this.userProfile.collectCount = this.collectedRecipeIds.length;
+      this.wishlistVersion += 1;
+      AppStorage.setOrCreate('wishlistVersion', this.wishlistVersion);
+      this.profileVersion += 1;
+      AppStorage.setOrCreate('profileVersion', this.profileVersion);
     } catch (e) {
       // 容错处理
     }
@@ -588,6 +595,8 @@ export class AppDataState {
     const familyCount = this.recipes.filter(r => r.isFamilyRecipe).length;
     this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
     this.userProfile.fridgeItemCount = this.inventory.length;
+    this.userProfile.collectCount = this.collectedRecipeIds.length;
+    this.userProfile.dietRecordCount = this.dietLogs.length;
     AppStorage.setOrCreate('userNickname', this.userProfile.nickname);
     this.profileVersion += 1;
     AppStorage.setOrCreate('profileVersion', this.profileVersion);
