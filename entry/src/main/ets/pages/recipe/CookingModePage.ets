@@ -25,6 +25,7 @@ struct CookingModePage {
   @State isTiming: boolean = false;
   @State remainingSeconds: number = 0;
   @State isFinished: boolean = false;
+  @State isLoggedToDiet: boolean = false;
   @State isSpeaking: boolean = false;
   @State spokenText: string = '';
   private timerId: number = -1;
@@ -131,10 +132,9 @@ struct CookingModePage {
       this.currentStepIndex++;
       this.resetStepTimer();
     } else {
-      // 完成做菜打卡
+      // 烹饪各步骤全部完成，进入做完结算界面
       this.stopTimer();
       this.isFinished = true;
-      this.state.logCookingCompletion(this.recipe.id, this.recipe.name, this.recipe.calories);
     }
   }
 
@@ -413,7 +413,7 @@ struct CookingModePage {
               .fontColor(ColorConstants.COLOR_CHA)
               .margin({ bottom: 24 })
 
-            Button('📔 记录到饮食日记')
+            Button(this.isLoggedToDiet ? '✓ 已记录到日记，查看足迹' : '📔 记录到饮食日记')
               .width('100%')
               .height(44)
               .backgroundColor(ColorConstants.COLOR_ZHU)
@@ -423,6 +423,11 @@ struct CookingModePage {
               .borderRadius(StyleConstants.RADIUS_MD)
               .margin({ bottom: 10 })
               .onClick(() => {
+                if (!this.isLoggedToDiet && this.recipe) {
+                  this.state.logCookingCompletion(this.recipe.id, this.recipe.name, this.recipe.calories);
+                  this.isLoggedToDiet = true;
+                  promptAction.showToast({ message: '已为您盖章收录至饮食日记' });
+                }
                 router.replaceUrl({
                   url: 'pages/mine/DietLogPage'
                 });

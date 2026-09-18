@@ -509,18 +509,10 @@ export class MockDataService {
   }
 
   /**
-   * 初始冰箱库存数据
+   * 初始冰箱库存数据（首次安装默认为空）
    */
   static getInitialInventory(): InventoryItem[] {
-    return [
-      { id: 'inv_01', name: '番茄', category: '蔬菜', quantity: 2, unit: '个', daysRemaining: 2, storageType: '冷藏' },
-      { id: 'inv_02', name: '鸡蛋', category: '蛋奶', quantity: 4, unit: '个', daysRemaining: 7, storageType: '冷藏' },
-      { id: 'inv_03', name: '洋葱', category: '蔬菜', quantity: 1, unit: '个', daysRemaining: 12, storageType: '常温' },
-      { id: 'inv_04', name: '青椒', category: '蔬菜', quantity: 2, unit: '个', daysRemaining: 4, storageType: '冷藏' },
-      { id: 'inv_05', name: '豆腐', category: '豆制品', quantity: 1, unit: '块', daysRemaining: 1, storageType: '冷藏' },
-      { id: 'inv_06', name: '米饭', category: '主食', quantity: 1, unit: '碗', daysRemaining: 1, storageType: '冷藏' },
-      { id: 'inv_07', name: '大蒜', category: '调料', quantity: 1, unit: '头', daysRemaining: 20, storageType: '常温' }
-    ];
+    return [];
   }
 
   /**
@@ -724,7 +716,7 @@ export class MockDataService {
       recipeCount: 0,
       collectCount: 0,
       dietRecordCount: 0,
-      fridgeItemCount: 7,
+      fridgeItemCount: 0,
       tastePreferences: ['川渝家常', '微辣鲜香', '清淡养生']
     };
   }

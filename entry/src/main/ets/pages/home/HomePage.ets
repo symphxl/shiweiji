@@ -380,57 +380,88 @@ export struct HomePage {
           .width('100%')
           .margin({ top: 4, bottom: 8 })
 
-          // 冰箱食材胶囊条
+          // 冰箱食材胶囊条与空状态提示
           Column() {
-            Flex({ wrap: FlexWrap.Wrap }) {
-              ForEach(this.state.inventory.filter(item => item.quantity > 0).slice(0, 8), (item: InventoryItem) => {
-                Text(`${item.name}×${item.quantity}${item.unit ? item.unit : ''}`)
+            if (this.state.inventory.filter(item => item.quantity > 0).length === 0) {
+              Column() {
+                Row({ space: 8 }) {
+                  Text('🧊')
+                    .fontSize(22)
+                  Text('您的冰箱空空如也，感觉保存点食材进去吧~')
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_BO)
+                    .layoutWeight(1)
+                }
+                .width('100%')
+                .alignItems(VerticalAlign.Center)
+                .margin({ bottom: 12 })
+
+                Button('＋ 放入第一批食材')
+                  .height(34)
+                  .padding({ left: 16, right: 16 })
+                  .backgroundColor(ColorConstants.COLOR_ZHU)
+                  .fontColor(Color.White)
                   .fontSize(StyleConstants.FONT_CAPTION)
-                  .fontColor(ColorConstants.COLOR_ZHU)
                   .fontWeight(FontWeight.Medium)
-                  .backgroundColor('rgba(158, 43, 37, 0.08)')
-                  .border({
-                    width: 1,
-                    color: ColorConstants.COLOR_ZHU
+                  .borderRadius(StyleConstants.RADIUS_PILL)
+                  .onClick(() => {
+                    this.showQuickAddDialog = true;
                   })
+              }
+              .width('100%')
+              .padding({ top: 10, bottom: 10 })
+              .alignItems(HorizontalAlign.Center)
+            } else {
+              Flex({ wrap: FlexWrap.Wrap }) {
+                ForEach(this.state.inventory.filter(item => item.quantity > 0).slice(0, 8), (item: InventoryItem) => {
+                  Text(`${item.name}×${item.quantity}${item.unit ? item.unit : ''}`)
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_ZHU)
+                    .fontWeight(FontWeight.Medium)
+                    .backgroundColor('rgba(158, 43, 37, 0.08)')
+                    .border({
+                      width: 1,
+                      color: ColorConstants.COLOR_ZHU
+                    })
+                    .borderRadius(StyleConstants.RADIUS_PILL)
+                    .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+                    .margin({ right: 6, bottom: 6 })
+                }, (item: InventoryItem) => `${item.id}_${item.quantity}_${this.inventoryVersion}`)
+
+                Text('＋ 添加')
+                  .fontSize(StyleConstants.FONT_CAPTION)
+                  .fontColor(ColorConstants.COLOR_SUMI)
+                  .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
                   .borderRadius(StyleConstants.RADIUS_PILL)
                   .padding({ left: 10, right: 10, top: 4, bottom: 4 })
                   .margin({ right: 6, bottom: 6 })
-              }, (item: InventoryItem) => `${item.id}_${item.quantity}_${this.inventoryVersion}`)
-
-              Text('＋ 添加')
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontColor(ColorConstants.COLOR_SUMI)
-                .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-                .borderRadius(StyleConstants.RADIUS_PILL)
-                .padding({ left: 10, right: 10, top: 4, bottom: 4 })
-                .margin({ right: 6, bottom: 6 })
-                .onClick(() => {
-                  this.showQuickAddDialog = true;
-                })
-            }
-            .width('100%')
-
-            // 临期提醒（根据本地持久化库存动态计算）
-            Row() {
-              if (this.getExpiringItem() !== null) {
-                Text(`⚠️ ${this.getExpiringItem()!.name} ${this.getExpiringItem()!.daysRemaining <= 0 ? '已过期' : this.getExpiringItem()!.daysRemaining + ' 天后临期'}，今天用掉它 ›`)
-                  .fontSize(StyleConstants.FONT_CAPTION)
-                  .fontColor(ColorConstants.COLOR_WARNING)
                   .onClick(() => {
-                    router.pushUrl({ url: 'pages/mine/FridgePage' });
-                  })
-              } else {
-                Text('✓ 冰箱食材储备新鲜，随心搭配出美味 ›')
-                  .fontSize(StyleConstants.FONT_CAPTION)
-                  .fontColor(ColorConstants.COLOR_QING)
-                  .onClick(() => {
-                    router.pushUrl({ url: 'pages/mine/FridgePage' });
+                    this.showQuickAddDialog = true;
                   })
               }
+              .width('100%')
+
+              // 临期提醒（根据本地持久化库存动态计算）
+              Row() {
+                if (this.getExpiringItem() !== null) {
+                  Text(`⚠️ ${this.getExpiringItem()!.name} ${this.getExpiringItem()!.daysRemaining <= 0 ? '已过期' : this.getExpiringItem()!.daysRemaining + ' 天后临期'}，今天用掉它 ›`)
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_WARNING)
+                    .onClick(() => {
+                      router.pushUrl({ url: 'pages/mine/FridgePage' });
+                    })
+                } else {
+                  Text('✓ 冰箱食材储备新鲜，随心搭配出美味 ›')
+                    .fontSize(StyleConstants.FONT_CAPTION)
+                    .fontColor(ColorConstants.COLOR_QING)
+                    .onClick(() => {
+                      router.pushUrl({ url: 'pages/mine/FridgePage' });
+                    })
+                }
+              }
+              .width('100%')
+              .margin({ top: 4 })
             }
-            .width('100%')
-            .margin({ top: 4 })
           }
           .width('100%')
           .padding(StyleConstants.SPACE_MD)
@@ -454,6 +485,10 @@ export struct HomePage {
             .borderRadius(StyleConstants.RADIUS_MD)
             .margin({ top: 12, bottom: 12 })
             .onClick(() => {
+              if (this.state.inventory.filter(item => item.quantity > 0).length === 0) {
+                promptAction.showToast({ message: '您的冰箱空空如也，感觉保存点食材进去吧~' });
+                return;
+              }
               if (this.onSwitchToRecipeTab) {
                 this.onSwitchToRecipeTab();
               }

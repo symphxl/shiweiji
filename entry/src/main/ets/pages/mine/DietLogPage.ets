@@ -6,7 +6,6 @@ import { AppDataState, DietLogEntry } from '../../common/services/AppDataState';
 import { ShiWeiNavBar } from '../../components/common/ShiWeiNavBar';
 import { ShiWeiSeal } from '../../components/common/ShiWeiSeal';
 import { EmptyStateView } from '../../components/common/EmptyStateView';
-import { RecipeItem } from '../../common/models/RecipeModel';
 
 /**
  * 拾味记 · 饮食记录与足迹 (Diet Log)
@@ -20,13 +19,6 @@ struct DietLogPage {
   @State private state: AppDataState = AppDataState.getInstance();
   @State private dietLogs: DietLogEntry[] = [];
   @State private totalCalories: number = 0;
-
-  // 记一餐弹窗控制
-  @State private isAddDialogVisible: boolean = false;
-  @State private inputMealName: string = '';
-  @State private inputCalories: string = '260';
-  @State private selectedMealType: string = '午餐';
-  private mealTypes: string[] = ['早餐', '午餐', '晚餐', '加餐'];
 
   aboutToAppear() {
     this.refreshLogs();
@@ -43,35 +35,6 @@ struct DietLogPage {
       sum += this.dietLogs[i].calories;
     }
     this.totalCalories = sum;
-  }
-
-  openAddDialog() {
-    const hour = new Date().getHours();
-    if (hour < 10) {
-      this.selectedMealType = '早餐';
-    } else if (hour < 14) {
-      this.selectedMealType = '午餐';
-    } else if (hour < 21) {
-      this.selectedMealType = '晚餐';
-    } else {
-      this.selectedMealType = '加餐';
-    }
-    this.inputMealName = '';
-    this.inputCalories = '260';
-    this.isAddDialogVisible = true;
-  }
-
-  confirmAddLog() {
-    const trimmed = this.inputMealName.trim();
-    if (!trimmed) {
-      promptAction.showToast({ message: '请输入餐食名称' });
-      return;
-    }
-    const cal = parseInt(this.inputCalories);
-    const validCalories = (!isNaN(cal) && cal > 0) ? cal : 200;
-    this.state.addDietLog(trimmed, validCalories, this.selectedMealType);
-    promptAction.showToast({ message: '已为您盖章收录至饮食日记' });
-    this.isAddDialogVisible = false;
   }
 
   deleteLog(id: string, name: string) {
@@ -96,12 +59,8 @@ struct DietLogPage {
       Column() {
         ShiWeiNavBar({
           title: '味道足迹 · 饮食日记',
-          rightText: '＋ 记一餐',
           onBackClick: () => {
             router.back();
-          },
-          onRightClick: () => {
-            this.openAddDialog();
           }
         })
 
@@ -123,18 +82,6 @@ struct DietLogPage {
               }
               .layoutWeight(1)
               .alignItems(HorizontalAlign.Start)
-
-              Button('＋ 记一餐')
-                .height(30)
-                .padding({ left: 10, right: 10 })
-                .backgroundColor(ColorConstants.COLOR_ZHU)
-                .fontColor(Color.White)
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .fontWeight(FontWeight.Medium)
-                .borderRadius(StyleConstants.RADIUS_PILL)
-                .onClick(() => {
-                  this.openAddDialog();
-                })
             }
             .width('100%')
             .padding(StyleConstants.SPACE_MD)
@@ -152,24 +99,12 @@ struct DietLogPage {
                 EmptyStateView({
                   icon: '📔',
                   title: '暂无饮食打卡记录',
-                  desc: '在菜谱烹饪模式完成做菜后自动打卡，或点击右上角「记一餐」随时补记'
+                  desc: '在食谱开启烹饪模式完成做菜后，点击「记录到饮食日记」即可自动盖章收录'
                 })
-
-                Button('＋ 记下第一餐')
-                  .height(38)
-                  .padding({ left: 20, right: 20 })
-                  .backgroundColor(ColorConstants.COLOR_ZHU)
-                  .fontColor(Color.White)
-                  .fontSize(StyleConstants.FONT_BODY_SM)
-                  .fontWeight(FontWeight.Bold)
-                  .borderRadius(StyleConstants.RADIUS_PILL)
-                  .margin({ top: 16 })
-                  .onClick(() => {
-                    this.openAddDialog();
-                  })
               }
               .width('100%')
               .alignItems(HorizontalAlign.Center)
+              .padding({ top: 36, bottom: 36 })
             } else {
               Column() {
                 ForEach(this.dietLogs, (log: DietLogEntry) => {
@@ -247,153 +182,6 @@ struct DietLogPage {
       .backgroundImageSize(ImageSize.Cover)
       .backgroundImagePosition(Alignment.Center)
       .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
-
-      // 「＋ 记一餐」弹窗遮罩层
-      if (this.isAddDialogVisible) {
-        Column() {
-          // 外部半透明点击遮罩
-        }
-        .width('100%')
-        .height('100%')
-        .backgroundColor('rgba(0, 0, 0, 0.45)')
-        .onClick(() => {
-          this.isAddDialogVisible = false;
-        })
-
-        // 弹窗卡片
-        Column() {
-          Row() {
-            Text('记录今日烟火味')
-              .fontSize(StyleConstants.FONT_H3)
-              .fontWeight(FontWeight.Bold)
-              .fontFamily('Songti SC')
-              .fontColor(ColorConstants.COLOR_INK)
-
-            Blank()
-
-            Text('✕')
-              .fontSize(16)
-              .fontColor(ColorConstants.COLOR_BO)
-              .padding(4)
-              .onClick(() => {
-                this.isAddDialogVisible = false;
-              })
-          }
-          .width('100%')
-          .margin({ bottom: 12 })
-
-          // 餐别切换
-          Row({ space: 8 }) {
-            ForEach(this.mealTypes, (type: string) => {
-              Button(type)
-                .height(28)
-                .padding({ left: 12, right: 12 })
-                .fontSize(StyleConstants.FONT_CAPTION)
-                .backgroundColor(this.selectedMealType === type ? ColorConstants.COLOR_ZHU : 'rgba(0, 0, 0, 0.05)')
-                .fontColor(this.selectedMealType === type ? Color.White : ColorConstants.COLOR_SUMI)
-                .borderRadius(StyleConstants.RADIUS_PILL)
-                .onClick(() => {
-                  this.selectedMealType = type;
-                })
-            })
-          }
-          .width('100%')
-          .margin({ bottom: 14 })
-
-          // 餐品名称输入
-          Text('餐品名称')
-            .fontSize(StyleConstants.FONT_CAPTION)
-            .fontColor(ColorConstants.COLOR_BO)
-            .alignSelf(ItemAlign.Start)
-            .margin({ bottom: 4 })
-
-          TextInput({ text: this.inputMealName, placeholder: '输入餐品名称，如：西红柿炒蛋' })
-            .height(40)
-            .fontSize(StyleConstants.FONT_BODY_SM)
-            .backgroundColor('#F5EFE6')
-            .borderRadius(StyleConstants.RADIUS_SM)
-            .border({ width: 1, color: ColorConstants.COLOR_DIVIDER })
-            .onChange((value: string) => {
-              this.inputMealName = value;
-            })
-            .margin({ bottom: 8 })
-
-          // 快速推荐点选
-          Row({ space: 6 }) {
-            Text('快捷：')
-              .fontSize(11)
-              .fontColor(ColorConstants.COLOR_BO)
-
-            ForEach(this.state.recipes.slice(0, 3), (rec: RecipeItem) => {
-              Text(rec.name)
-                .fontSize(11)
-                .fontColor(ColorConstants.COLOR_ZHU)
-                .backgroundColor('rgba(192, 90, 80, 0.08)')
-                .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-                .borderRadius(4)
-                .onClick(() => {
-                  this.inputMealName = rec.name;
-                  this.inputCalories = rec.calories.toString();
-                })
-            })
-          }
-          .width('100%')
-          .margin({ bottom: 12 })
-
-          // 热量估算
-          Text('预估热量 (kcal)')
-            .fontSize(StyleConstants.FONT_CAPTION)
-            .fontColor(ColorConstants.COLOR_BO)
-            .alignSelf(ItemAlign.Start)
-            .margin({ bottom: 4 })
-
-          TextInput({ text: this.inputCalories, placeholder: '260' })
-            .height(40)
-            .type(InputType.Number)
-            .fontSize(StyleConstants.FONT_BODY_SM)
-            .backgroundColor('#F5EFE6')
-            .borderRadius(StyleConstants.RADIUS_SM)
-            .border({ width: 1, color: ColorConstants.COLOR_DIVIDER })
-            .onChange((value: string) => {
-              this.inputCalories = value;
-            })
-            .margin({ bottom: 18 })
-
-          // 操作按钮
-          Row({ space: 12 }) {
-            Button('取消')
-              .layoutWeight(1)
-              .height(40)
-              .backgroundColor(ColorConstants.COLOR_SHENGCHENG)
-              .fontColor(ColorConstants.COLOR_SUMI)
-              .fontSize(StyleConstants.FONT_BODY_SM)
-              .borderRadius(StyleConstants.RADIUS_MD)
-              .onClick(() => {
-                this.isAddDialogVisible = false;
-              })
-
-            Button('盖章收录')
-              .layoutWeight(1)
-              .height(40)
-              .backgroundColor(ColorConstants.COLOR_ZHU)
-              .fontColor(Color.White)
-              .fontSize(StyleConstants.FONT_BODY_SM)
-              .fontWeight(FontWeight.Bold)
-              .borderRadius(StyleConstants.RADIUS_MD)
-              .onClick(() => {
-                this.confirmAddLog();
-              })
-          }
-          .width('100%')
-        }
-        .width('86%')
-        .constraintSize({ maxWidth: 400 })
-        .backgroundColor(ColorConstants.COLOR_PAPER)
-        .borderRadius(StyleConstants.RADIUS_LG)
-        .padding(20)
-        .border({ width: 1, color: ColorConstants.COLOR_DIVIDER })
-        .shadow({ radius: 16, color: 'rgba(0, 0, 0, 0.2)', offsetY: 4 })
-      }
     }
     .width('100%')
     .height('100%')

@@ -5,6 +5,7 @@ import { StyleConstants } from '../../common/constants/StyleConstants';
 import { AppDataState } from '../../common/services/AppDataState';
 import { InventoryItem } from '../../common/models/InventoryModel';
 import { ShiWeiNavBar } from '../../components/common/ShiWeiNavBar';
+import { EmptyStateView } from '../../components/common/EmptyStateView';
 
 class StatusDisplayInfo {
   text: string = '';
@@ -220,8 +221,34 @@ struct FridgePage {
             .margin({ bottom: 12 })
 
             // 食材库存列表
-            Column() {
-              ForEach(this.getFilteredInventory(), (item: InventoryItem) => {
+            if (this.getFilteredInventory().length === 0) {
+              Column() {
+                EmptyStateView({
+                  icon: '🧊',
+                  title: '您的冰箱空空如也，感觉保存点食材进去吧~',
+                  desc: '记录常备食材与保质期，智能规划三餐，避免遗忘变质'
+                })
+
+                Button('＋ 放入第一批食材')
+                  .height(38)
+                  .padding({ left: 20, right: 20 })
+                  .backgroundColor(ColorConstants.COLOR_ZHU)
+                  .fontColor(Color.White)
+                  .fontSize(StyleConstants.FONT_BODY_SM)
+                  .fontWeight(FontWeight.Bold)
+                  .borderRadius(StyleConstants.RADIUS_PILL)
+                  .margin({ top: 16 })
+                  .onClick(() => {
+                    this.showAddDialog = true;
+                  })
+              }
+              .width('100%')
+              .alignItems(HorizontalAlign.Center)
+              .padding({ top: 36, bottom: 36 })
+              .margin({ bottom: 80 })
+            } else {
+              Column() {
+                ForEach(this.getFilteredInventory(), (item: InventoryItem) => {
                 Row() {
                   // 食材名与状态
                   Column() {
@@ -311,41 +338,46 @@ struct FridgePage {
             .width('100%')
             .margin({ bottom: 80 })
           }
-          .width('100%')
-          .constraintSize({ maxWidth: this.isTablet ? 860 : '100%' })
-          .justifyContent(FlexAlign.Start)
-          .alignItems(HorizontalAlign.Start)
-          .padding(StyleConstants.SPACE_MD)
         }
-        .scrollBar(BarState.Off)
-        .edgeEffect(EdgeEffect.Spring)
         .width('100%')
-        .layoutWeight(1)
-        .align(Alignment.Top)
+        .constraintSize({ maxWidth: this.isTablet ? 860 : '100%' })
+        .justifyContent(FlexAlign.Start)
+        .alignItems(HorizontalAlign.Start)
+        .padding(StyleConstants.SPACE_MD)
       }
+      .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
       .width('100%')
-      .height('100%')
-      .justifyContent(FlexAlign.Start)
-      .alignItems(HorizontalAlign.Center)
-      .backgroundColor(Color.Transparent)
-      .backgroundImage($rawfile('image/img_background.png'), ImageRepeat.NoRepeat)
-      .backgroundImageSize(ImageSize.Cover)
-      .backgroundImagePosition(Alignment.Center)
+      .layoutWeight(1)
+      .align(Alignment.Top)
+    }
+    .width('100%')
+    .height('100%')
+    .justifyContent(FlexAlign.Start)
+    .alignItems(HorizontalAlign.Center)
+    .backgroundColor(Color.Transparent)
+    .backgroundImage($rawfile('image/img_background.png'), ImageRepeat.NoRepeat)
+    .backgroundImageSize(ImageSize.Cover)
+    .backgroundImagePosition(Alignment.Center)
 
-      // 底部浮动「清空冰箱配菜」按钮
-      Row() {
-        Button('用当前冰箱库存，看看今天能做什么 →')
-          .width('100%')
-          .constraintSize({ maxWidth: this.isTablet ? 860 : '100%' })
-          .height(44)
-          .backgroundColor(ColorConstants.COLOR_ZHU)
-          .fontColor(Color.White)
-          .fontSize(StyleConstants.FONT_BODY)
-          .fontWeight(FontWeight.Bold)
-          .borderRadius(StyleConstants.RADIUS_MD)
-          .onClick(() => {
-            router.back();
-          })
+    // 底部浮动「清空冰箱配菜」按钮
+    Row() {
+      Button('用当前冰箱库存，看看今天能做什么 →')
+        .width('100%')
+        .constraintSize({ maxWidth: this.isTablet ? 860 : '100%' })
+        .height(44)
+        .backgroundColor(ColorConstants.COLOR_ZHU)
+        .fontColor(Color.White)
+        .fontSize(StyleConstants.FONT_BODY)
+        .fontWeight(FontWeight.Bold)
+        .borderRadius(StyleConstants.RADIUS_MD)
+        .onClick(() => {
+          if (this.state.inventory.filter(item => item.quantity > 0).length === 0) {
+            promptAction.showToast({ message: '您的冰箱空空如也，感觉保存点食材进去吧~' });
+            return;
+          }
+          router.back();
+        })
       }
       .width('100%')
       .justifyContent(FlexAlign.Center)

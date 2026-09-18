@@ -96,8 +96,7 @@ export struct RecipeListPage {
   getAllCandidateIngredients(): string[] {
     let list: string[] = [];
     if (this.ingredientSource === 'fridge') {
-      const fridgeList = this.state.inventory.map(item => item.name);
-      list = fridgeList.length > 0 ? fridgeList : ['番茄', '鸡蛋', '洋葱', '青椒', '老豆腐', '米'];
+      list = this.state.inventory.filter(item => item.quantity > 0).map(item => item.name);
     } else {
       const all = this.state.getAllIngredientNames();
       if (this.repoCategoryTab === '全部') {
@@ -490,7 +489,7 @@ export struct RecipeListPage {
           // 食材 Chip 容器（支持省略号...展开/收起）
           if (this.getAllCandidateIngredients().length === 0) {
             Row() {
-              Text(`未找到与 "${this.ingredientSearchKey}" 相关的食材`)
+              Text(this.ingredientSource === 'fridge' ? '您的冰箱空空如也，感觉保存点食材进去吧~' : (this.ingredientSearchKey.trim().length > 0 ? `未找到与 "${this.ingredientSearchKey}" 相关的食材` : '暂无可选食材'))
                 .fontSize(StyleConstants.FONT_CAPTION)
                 .fontColor(ColorConstants.COLOR_BO)
                 .padding({ top: 12, bottom: 12 })
@@ -855,16 +854,24 @@ export struct RecipeListPage {
             }
           } else {
             if (this.selectedIngredients.length === 0) {
-              EmptyStateView({
-                icon: '🧊',
-                title: '请先勾选冰箱食材',
-                desc: '从上方勾选冰箱现有食材与厨具，系统将按三档模式自动匹配可做菜肴',
-                buttonText: '勾选冰箱全部食材',
-                onButtonClick: () => {
-                  this.selectedIngredients = this.state.inventory.map(item => item.name);
-                  this.calculateMatches();
-                }
-              })
+              if (this.state.inventory.filter(item => item.quantity > 0).length === 0) {
+                EmptyStateView({
+                  icon: '🧊',
+                  title: '您的冰箱空空如也，感觉保存点食材进去吧~',
+                  desc: '在首页或「我的冰箱」中录入食材后，即可在这里智能匹配三餐食谱'
+                })
+              } else {
+                EmptyStateView({
+                  icon: '🧊',
+                  title: '请先勾选冰箱食材',
+                  desc: '从上方勾选冰箱现有食材与厨具，系统将按三档模式自动匹配可做菜肴',
+                  buttonText: '勾选冰箱全部食材',
+                  onButtonClick: () => {
+                    this.selectedIngredients = this.state.inventory.filter(item => item.quantity > 0).map(item => item.name);
+                    this.calculateMatches();
+                  }
+                })
+              }
             } else if (this.matchedResults.length === 0) {
               EmptyStateView({
                 icon: '🍃',

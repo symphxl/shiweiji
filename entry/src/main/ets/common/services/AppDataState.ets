@@ -31,16 +31,7 @@ export class AppDataState {
   collectedRecipeIds: string[] = ['rec_001', 'rec_002'];
   // 「固定食材库」中用户手动新增的食材（内置食材固定不可改，新增项持久化到应用沙箱）
   customIngredients: string[] = [];
-  dietLogs: DietLogEntry[] = [
-    {
-      id: 'log_01',
-      recipeId: 'rec_001',
-      recipeName: '番茄炒蛋',
-      timestamp: Date.now() - 86400000,
-      timeStr: '昨天 晚餐',
-      calories: 220
-    }
-  ];
+  dietLogs: DietLogEntry[] = [];
   userProfile: UserProfile;
   private context: common.Context | null = null;
   private profileVersion: number = 0;
@@ -52,7 +43,7 @@ export class AppDataState {
 
   private constructor() {
     this.recipes = MockDataService.getInitialRecipes();
-    this.inventory = MockDataService.getInitialInventory();
+    this.inventory = [];
     this.shoppingList = MockDataService.getInitialShoppingList();
     this.posts = MockDataService.getInitialPosts();
     this.userProfile = MockDataService.getDefaultUserProfile();
@@ -498,8 +489,9 @@ export class AppDataState {
       if (saved !== null && Array.isArray(saved)) {
         this.dietLogs = saved;
       } else {
-        // 首次启动时将默认打卡数据持久化
-        DietLogStore.save(context, this.dietLogs);
+        // 首次安装，饮食日记默认为空
+        this.dietLogs = [];
+        DietLogStore.save(context, []);
       }
       this.userProfile.dietRecordCount = this.dietLogs.length;
       this.dietLogVersion += 1;
@@ -571,8 +563,9 @@ export class AppDataState {
       if (saved !== null && Array.isArray(saved)) {
         this.inventory = saved.filter(item => item.quantity > 0);
       } else {
-        this.inventory = MockDataService.getInitialInventory().filter(item => item.quantity > 0);
-        InventoryStore.save(context, this.inventory);
+        // 首次安装，我的冰箱默认为空
+        this.inventory = [];
+        InventoryStore.save(context, []);
       }
       this.userProfile.fridgeItemCount = this.inventory.length;
       this.inventoryVersion += 1;
