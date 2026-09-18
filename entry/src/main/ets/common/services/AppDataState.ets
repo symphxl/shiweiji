@@ -8,21 +8,13 @@ import { RecipeStore } from './RecipeStore';
 import { IngredientStore } from './IngredientStore';
 import { InventoryStore } from './InventoryStore';
 import { WishlistStore } from './WishlistStore';
+import { DietLogStore } from './DietLogStore';
 import { AddIngredientResult, RecipeIngredientFilter } from './RecipeIngredientFilter';
 import { EXCEL_INGREDIENT_NAMES } from '../data/ExcelIngredientsData';
 import { UserProfile } from '../models/UserModel';
+import { DietLogEntry } from '../models/DietLogModel';
 
-/**
- * 饮食记录条目
- */
-export interface DietLogEntry {
-  id: string;
-  recipeId: string;
-  recipeName: string;
-  timestamp: number;
-  timeStr: string;
-  calories: number;
-}
+export { DietLogEntry } from '../models/DietLogModel';
 
 /**
  * 全局应用状态中心（单例模式）
@@ -56,6 +48,7 @@ export class AppDataState {
   private ingredientVersion: number = 0;
   private inventoryVersion: number = 0;
   wishlistVersion: number = 0;
+  dietLogVersion: number = 0;
 
   private constructor() {
     this.recipes = MockDataService.getInitialRecipes();
@@ -68,6 +61,7 @@ export class AppDataState {
     AppStorage.setOrCreate('recipeVersion', 0);
     AppStorage.setOrCreate('ingredientVersion', 0);
     AppStorage.setOrCreate('inventoryVersion', 0);
+    AppStorage.setOrCreate('dietLogVersion', 0);
   }
 
   static getInstance(): AppDataState {
@@ -481,18 +475,92 @@ export class AppDataState {
     }
   }
 
-  // ================= 烹饪打卡记录 =================
+  // ================= 烹饪打卡与饮食日记本地持久化 =================
+  private persistDietLogs(): void {
+    const ctx = this.ensureContext();
+    if (ctx) {
+      DietLogStore.save(ctx, this.dietLogs);
+    }
+    this.dietLogVersion += 1;
+    AppStorage.setOrCreate('dietLogVersion', this.dietLogVersion);
+    this.userProfile.dietRecordCount = this.dietLogs.length;
+    this.profileVersion += 1;
+    AppStorage.setOrCreate('profileVersion', this.profileVersion);
+    if (ctx) {
+      ProfileStore.save(ctx, this.userProfile);
+    }
+  }
+
+  restoreDietLogs(context: common.Context): void {
+    this.context = context;
+    try {
+      const saved = DietLogStore.restore(context);
+      if (saved !== null && Array.isArray(saved)) {
+        this.dietLogs = saved;
+      } else {
+        // 首次启动时将默认打卡数据持久化
+        DietLogStore.save(context, this.dietLogs);
+      }
+      this.userProfile.dietRecordCount = this.dietLogs.length;
+      this.dietLogVersion += 1;
+      AppStorage.setOrCreate('dietLogVersion', this.dietLogVersion);
+      this.profileVersion += 1;
+      AppStorage.setOrCreate('profileVersion', this.profileVersion);
+    } catch (e) {
+      // 容错处理
+    }
+  }
+
   logCookingCompletion(recipeId: string, recipeName: string, calories: number): void {
+    const hour = new Date().getHours();
+    let meal = '午餐';
+    if (hour < 10) {
+      meal = '早餐';
+    } else if (hour < 14) {
+      meal = '午餐';
+    } else if (hour < 21) {
+      meal = '晚餐';
+    } else {
+      meal = '夜宵';
+    }
     const newLog: DietLogEntry = {
       id: 'log_' + Date.now(),
       recipeId: recipeId,
       recipeName: recipeName,
       timestamp: Date.now(),
-      timeStr: '今天 ' + (new Date().getHours() < 14 ? '午餐' : '晚餐'),
-      calories: calories
+      timeStr: '今天 ' + meal,
+      calories: calories,
+      mealType: meal
     };
     this.dietLogs.unshift(newLog);
-    this.userProfile.dietRecordCount = this.dietLogs.length;
+    this.persistDietLogs();
+  }
+
+  addDietLog(recipeName: string, calories: number, mealType: string, recipeId?: string): void {
+    const trimmedName = recipeName.trim();
+    if (!trimmedName) {
+      return;
+    }
+    const validCal = (typeof calories === 'number' && !isNaN(calories) && calories >= 0) ? Math.round(calories) : 200;
+    const newLog: DietLogEntry = {
+      id: 'log_' + Date.now(),
+      recipeId: recipeId || '',
+      recipeName: trimmedName,
+      timestamp: Date.now(),
+      timeStr: '今天 ' + (mealType || '午餐'),
+      calories: validCal,
+      mealType: mealType || '午餐'
+    };
+    this.dietLogs.unshift(newLog);
+    this.persistDietLogs();
+  }
+
+  deleteDietLog(id: string): void {
+    const initialLen = this.dietLogs.length;
+    this.dietLogs = this.dietLogs.filter(it => it.id !== id);
+    if (this.dietLogs.length !== initialLen) {
+      this.persistDietLogs();
+    }
   }
 
   // ================= 个人资料与全局初始化 =================
@@ -523,6 +591,7 @@ export class AppDataState {
     this.restoreCustomIngredients(context);
     this.restoreInventory(context);
     this.restoreWishlist(context);
+    this.restoreDietLogs(context);
     const familyCount = this.recipes.filter(r => r.isFamilyRecipe).length;
     this.userProfile.familyRecipeBadge = `家传菜 ×${familyCount}`;
     this.userProfile.fridgeItemCount = this.inventory.length;

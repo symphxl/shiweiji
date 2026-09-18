@@ -19,11 +19,13 @@ export struct MinePage {
   @StorageLink('profileVersion') @Watch('refreshData') profileVersion: number = 0;
   @StorageLink('inventoryVersion') @Watch('refreshData') inventoryVersion: number = 0;
   @StorageLink('wishlistVersion') @Watch('refreshData') wishlistVersion: number = 0;
+  @StorageLink('dietLogVersion') @Watch('refreshData') dietLogVersion: number = 0;
   @State private state: AppDataState = AppDataState.getInstance();
   @State profile: UserProfile = this.state.userProfile;
   @State familyRecipes: RecipeItem[] = [];
   @State inventoryCount: number = 0;
   @State wishlistCount: number = 0;
+  @State dietLogCount: number = 0;
 
   aboutToAppear() {
     this.refreshData();
@@ -33,6 +35,7 @@ export struct MinePage {
     this.profile = this.state.userProfile;
     this.wishlistCount = this.state.collectedRecipeIds.length;
     this.inventoryCount = this.state.inventory.length;
+    this.dietLogCount = this.state.dietLogs.length;
 
     const list = this.state.recipes.filter(r => r.isFamilyRecipe || r.id.startsWith('rec_custom_'));
     // 设为「家传菜」的置顶排序：isFamilyRecipe === true 严格排在最前
@@ -143,7 +146,7 @@ export struct MinePage {
                   .margin({ top: 3, bottom: 4 })
 
                 // 7. 冰箱食材数量与我的冰箱食材数量同步挂钩
-                Text(`家常菜谱 ${this.familyRecipes.length} 道 · 冰箱食材 ${this.inventoryCount} 种 · 烹饪打卡 ${this.state.dietLogs.length} 次`)
+                Text(`家常菜谱 ${this.familyRecipes.length} 道 · 冰箱食材 ${this.inventoryCount} 种 · 烹饪打卡 ${this.dietLogCount} 次`)
                   .fontSize(StyleConstants.FONT_CAPTION)
                   .fontColor(ColorConstants.COLOR_SUMI)
               }
@@ -197,7 +200,7 @@ export struct MinePage {
           .margin({ right: 6 })
 
           Column() {
-            Text(this.state.dietLogs.length.toString())
+            Text(this.dietLogCount.toString())
               .fontSize(StyleConstants.FONT_H2)
               .fontWeight(FontWeight.Bold)
               .fontColor(ColorConstants.COLOR_INK)
